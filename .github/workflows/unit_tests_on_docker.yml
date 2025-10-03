@@ -74,6 +74,9 @@ jobs:
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
 
     steps:
+      - name: SetUp Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
@@ -112,4 +115,4 @@ jobs:
         run: docker exec ${{env.CONTAINER_ID}} ls -lah /
 
       - name: Run Unit Tests
-        run: "docker exec ${{ env.CONTAINER_ID }} python -m ${{ inputs.tests_command }} ${{ inputs.context }}"
+        run: "python -m ${{ inputs.tests_command }} ${{ inputs.context }}"
