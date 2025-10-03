@@ -122,5 +122,14 @@ jobs:
       - name: Print Docker User Home Directory contents
         run: docker exec ${{env.CONTAINER_ID}} ls -lah /
 
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..10}; do
+            if curl -fsS "http://${{ env.METADATA_HOST }}:${{ env.METADATA_PORT }}/api/health/" >/dev/null; then
+              echo "Server is ready"; exit 0
+            fi
+          done
+          echo "Server did not become ready in time"; exit 1
+
       - name: Run Unit Tests
         run: "python -m ${{ inputs.tests_command }} ${{ inputs.context }}"
