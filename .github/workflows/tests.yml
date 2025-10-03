@@ -17,7 +17,7 @@ jobs:
         shell: bash
     steps:
       - name: SetUp Python Project
-        uses: sidkos/pytest_hooks/.github/actions/setup_python_project@main
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
       - name: Run Docker Compose
         run: docker compose -f docker-compose.yml up -d

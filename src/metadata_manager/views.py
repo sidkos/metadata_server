@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from rest_framework import mixins, status, viewsets
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import serializers
 
 from .models.user import User
 from .serializers import UserSerializer
@@ -32,11 +33,16 @@ class UserViewSet(
         return Response(ids)
 
 
-class HealthCheck(APIView):
+class HealthCheckSerializer(serializers.Serializer):
+    status = serializers.CharField()
+
+
+class HealthCheck(generics.GenericAPIView):
     """
     Simple health check endpoint.
     """
 
+    serializer_class = HealthCheckSerializer
     authentication_classes: list[type] = []
     permission_classes: list[type] = []
 

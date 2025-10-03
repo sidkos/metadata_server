@@ -1,0 +1,27 @@
+name: 📜 🔍 OpenAPI Validation
+
+on:
+  workflow_call:
+    inputs:
+      open_api_spec_file:
+        description: 'Path to OpenAPI specification file'
+        required: true
+        type: string
+
+jobs:
+  openapi-validation:
+    name: "📜 🔍 OpenAPI Validation"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SetUp Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Validate OpenAPI Spec
+        run: |
+          python manage.py spectacular --file ${{ inputs.open_api_spec_file }}
+
+          if ! git diff --exit-code --quiet ${{ inputs.open_api_spec_file }}; then
+              echo "OpenAPI specification has changed. Please run 'python manage.py spectacular --file ${{ inputs.open_api_spec_file }}' and commit the changes."
+              exit 1
+          fi

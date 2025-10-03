@@ -1,0 +1,59 @@
+---
+name: 🛠️ Static Code Analysis
+
+on:
+  workflow_call:
+    build_and_install_client_package:
+      description: 'Whether to build and install the client package'
+      required: false
+      type: boolean
+      default: false
+  workflow_dispatch:
+    build_and_install_client_package:
+      description: 'Whether to build and install the client package'
+      required: false
+      type: boolean
+      default: false
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  static-code-analysis:
+    name: "🔍 📄 Static Code Analysis"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: SetUp Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Build and install client packages
+        if: ${{inputs.build_and_install_script}}
+        run: ${{ inputs.build_and_install_script }}
+
+      - name: Run Black
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/black@main
+
+      - name: Run Isort
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/isort@main
+
+      - name: Run Pycodestyle
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/pycodestyle@main
+
+      - name: Run Flake8
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/flake8@main
+
+      - name: Run MyPy
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/mypy@main
+
+      - name: Run Yaml Lint
+        if: always()
+        uses: sidkos/metadata_server/.github/actions/yamllint@main

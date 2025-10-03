@@ -1,5 +1,4 @@
----
-name: 🛠️ CI
+name: "🛠️ CI"
 
 on:
   workflow_call:
@@ -10,36 +9,14 @@ permissions:
   contents: write
 
 jobs:
-  static-code-analysis-workflow:
-    name: "🔍 📄 Static Code Analysis"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: SetUp Python Project
-        uses: sidkos/pytest_hooks/.github/actions/setup_python_project@main
+  static_code_analysis:
+    uses: sidkos/metadata_server/.github/workflows/static_code_analysis.yml@main
+    with:
+      build_and_install_script: "./scripts/build_and_install_open_api_client.sh"
+    secrets: inherit
 
-      - name: Run Black
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/black@main
-
-      - name: Run Isort
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/isort@main
-
-      - name: Run Pycodestyle
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/pycodestyle@main
-
-      - name: Run Flake8
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/flake8@main
-
-      - name: Run MyPy
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/mypy@main
-
-      - name: Run Yaml Lint
-        if: always()
-        uses: sidkos/pytest_hooks/.github/actions/yamllint@main
+  openapi-validation:
+    uses: sidkos/metadata_server/.github/workflows/openapi_validation_workflow.yml@main
+    with:
+      open_api_spec_file: "src/open_api_spec.yml"
+    secrets: inherit

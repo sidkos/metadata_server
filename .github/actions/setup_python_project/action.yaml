@@ -26,5 +26,8 @@ runs:
         save-always: true
 
     - name: Install Python dependencies
-      run: python3 -m pip install -r requirements-dev.txt
+      run: |
+        python3 -m pip install -r requirements.txt
+        python3 -m pip install -r requirements-dev.txt
+        python3 -m pip install -r requirements-build-client.txt
       shell: bash

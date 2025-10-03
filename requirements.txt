@@ -12,4 +12,3 @@ referencing==0.36.2
 rpds-py==0.27.1
 sqlparse==0.5.3
 uritemplate==4.2.0
-drf-spectacular==0.27.2

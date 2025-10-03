@@ -11,7 +11,11 @@ paths:
       - health
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -247,6 +251,13 @@ paths:
           description: ''
 components:
   schemas:
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
     User:
       type: object
       description: Serializer for the User model.
