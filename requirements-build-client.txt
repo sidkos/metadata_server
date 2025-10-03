@@ -1,0 +1,4 @@
+openapi-python-client==0.21.4
+poetry==1.8.3
+typer==0.9.0
+click>=8.0.0,<8.1.7

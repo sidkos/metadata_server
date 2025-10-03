@@ -4,5 +4,5 @@ isort .
 black .
 flake8 .
 pycodestyle .
-mypy .
+PYTHONPATH=src mypy .
 yamllint . --no-warnings

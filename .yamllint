@@ -1,5 +1,10 @@
 extends: default
 
+ignore: |
+  .venv/**
+  venv/**
+  src/open_api_spec.yml
+
 rules:
   line-length:
     max: 170

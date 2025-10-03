@@ -11,7 +11,7 @@ runs:
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.11"
+        python-version: "3.13"
 
     - name: Upgrade pip
       run: python3 -m pip install --upgrade pip
@@ -26,5 +26,5 @@ runs:
         save-always: true
 
     - name: Install Python dependencies
-      run: python3 -m pip install -r requirements.txt
+      run: python3 -m pip install -r requirements-dev.txt
       shell: bash

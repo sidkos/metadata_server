@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:15
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  metadata_manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    command: bash -c "python src/manage.py migrate && python src/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
