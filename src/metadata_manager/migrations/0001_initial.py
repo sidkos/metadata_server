@@ -1,6 +1,6 @@
 from django.db import migrations, models
 
-import metadata_manager.models.user
+import src.metadata_manager.models.user
 
 
 class Migration(migrations.Migration):
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                         primary_key=True,
                         serialize=False,
                         unique=True,
-                        validators=[metadata_manager.models.user.validate_israeli_id],
+                        validators=[src.metadata_manager.models.user.User.validate_israeli_id],
                     ),
                 ),
                 ("name", models.CharField(help_text="Full name (required).", max_length=100)),
@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                     models.CharField(
                         help_text="Phone number in E.164 format (e.g., +972...).",
                         max_length=20,
-                        validators=[metadata_manager.models.user.validate_phone],
+                        validators=[src.metadata_manager.models.user.User.validate_phone],
                     ),
                 ),
                 ("address", models.CharField(help_text="Street address (required).", max_length=255)),
