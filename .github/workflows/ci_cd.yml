@@ -20,8 +20,14 @@ jobs:
     uses: sidkos/metadata_server/.github/workflows/ci.yml@main
     secrets: inherit
 
-#  run-tests:
-#    name: "🔍 Run tests"
+#  build-server-image:
+#    name: 🏗️ 🖼️ Build Server Docker Image
 #    needs: ci
-#    uses: sidkos/metadata_server/.github/workflows/tests.yml@main
+#    uses: sidkos/metadata_server/.github/workflows/build_docker_image_with_env_variable_args_in_github.yml@main
+#    with:
+#      file: "Dockerfile"
+#      image_name: "metadata_server"
+#      sha-env-var: "E2E_INTEGRATION_FULL_IMAGE_SHA"
+#      git_repo_name: "e2e_integration_tests"
+#      variables-list: "AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_DEFAULT_REGION"
 #    secrets: inherit
