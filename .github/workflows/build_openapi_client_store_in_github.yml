@@ -54,3 +54,18 @@ jobs:
             metadata-client/dist/*.whl
             metadata-client/dist/*.tar.gz
           if-no-files-found: error
+
+      - name: Save github.repository_owner in lowercase to $GITHUB_ENV
+        run: echo "REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Install Twine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install twine
+
+      - name: Publish to GitHub Packages (Python) on tag
+        env:
+          TWINE_USERNAME: ${{ github.actor }}
+          TWINE_PASSWORD: ${{ github.token }}
+        run: |
+          twine upload --repository-url https://pypi.pkg.github.com/${{ env.REPOSITORY_OWNER }} metadata-client/dist/*
