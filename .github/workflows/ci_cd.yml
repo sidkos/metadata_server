@@ -22,6 +22,7 @@ jobs:
 
   build-server-image:
     name: 🏗️ 🖼️ Build Server Docker Image
+    needs: ci
     uses: sidkos/metadata_server/.github/workflows/build_docker_image_with_env_variable_args_in_github.yml@main
     with:
       file: "Dockerfile"
