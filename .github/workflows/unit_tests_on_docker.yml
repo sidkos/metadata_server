@@ -80,6 +80,9 @@ jobs:
           fetch-depth: 0
           submodules: 'true'
 
+      - name: Print runner environment variables
+        run: env | sort
+
       - name: Print runner user and it's HOME
         run: |
           whoami
