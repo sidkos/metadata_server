@@ -77,12 +77,6 @@ jobs:
       - name: SetUp Python Project
         uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: 'true'
-
       - name: Print runner environment variables
         run: env | sort
 
