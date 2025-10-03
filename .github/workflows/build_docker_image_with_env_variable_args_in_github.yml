@@ -27,8 +27,7 @@ permissions:
 jobs:
   build-image:
     name: "🐳 🏗️ build-image"
-    runs-on:
-      group: ubuntu-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
