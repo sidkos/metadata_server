@@ -3,13 +3,13 @@ name: 🛠️ Static Code Analysis
 
 on:
   workflow_call:
-    build_and_install_client_package:
+    build_and_install_script:
       description: 'Whether to build and install the client package'
       required: false
       type: boolean
       default: false
   workflow_dispatch:
-    build_and_install_client_package:
+    build_and_install_script:
       description: 'Whether to build and install the client package'
       required: false
       type: boolean
