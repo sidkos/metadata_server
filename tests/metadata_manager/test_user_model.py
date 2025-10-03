@@ -1,7 +1,6 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-
 from metadata_client.models.user import User
 
 pytestmark = pytest.mark.django_db

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from rest_framework import generics, mixins, status, viewsets
+from rest_framework import generics, mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import serializers
 
 from .models.user import User
 from .serializers import UserSerializer

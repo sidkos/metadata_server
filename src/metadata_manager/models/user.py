@@ -1,3 +1,5 @@
+from typing import Any
+
 import phonenumbers
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -33,13 +35,13 @@ class User(BaseModel):
         Raises:
             ValidationError: If the ID is not valid (wrong length, non-digit, bad checksum).
         """
-        id_num = value.zfill(9)
+        id_num: str = value.zfill(9)
         if not id_num.isdigit() or not (5 <= len(value) <= 9):
             raise ValidationError("ID must be a string of 5-9 digits")
-        total = 0
+        total: int = 0
         for idx, char in enumerate(id_num):
-            digit = int(char)
-            multiplied = digit * (1 if idx % 2 == 0 else 2)
+            digit: int = int(char)
+            multiplied: int = digit * (1 if idx % 2 == 0 else 2)
             if multiplied > 9:
                 multiplied -= 9
             total += multiplied
@@ -57,7 +59,7 @@ class User(BaseModel):
             ValidationError: If the phone number is not valid or not in E.164 format.
         """
         try:
-            phone = phonenumbers.parse(value)
+            phone: Any = phonenumbers.parse(value)
             if not phonenumbers.is_possible_number(phone) or not phonenumbers.is_valid_number(phone):
                 raise ValidationError("Phone number is not valid.")
         except Exception as exc:
