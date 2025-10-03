@@ -26,4 +26,5 @@ jobs:
     with:
       compose_file_path: 'docker-compose.yml'
       tests_host_name: 'metadata_manager'
+      build_and_install_script: "./scripts/build_and_install_open_api_client.sh"
     secrets: inherit

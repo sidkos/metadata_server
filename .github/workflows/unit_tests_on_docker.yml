@@ -23,6 +23,10 @@ on:
         required: false
         type: string
         default: 'pytest'
+      build_and_install_script:
+        description: 'Path from the root of the repository to the script to build and install project the packages'
+        required: false
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -49,6 +53,10 @@ on:
         required: false
         type: string
         default: "pytest"
+      build_and_install_script:
+        description: 'Path from the root of the repository to the script to build and install project the packages'
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -78,6 +86,10 @@ jobs:
     steps:
       - name: SetUp Python Project
         uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Build and install client packages
+        if: ${{ inputs.build_and_install_script }}
+        run: ${{ inputs.build_and_install_script }}
 
       - name: Print runner environment variables
         run: env | sort
