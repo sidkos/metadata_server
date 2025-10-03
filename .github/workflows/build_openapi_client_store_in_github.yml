@@ -1,0 +1,56 @@
+name: 🐍 📦 Build OpenAPI Client and store in GitHub
+run-name: "Build OpenAPI Client"
+
+on:
+  workflow_call:
+    inputs:
+      open_api_spec_file:
+        description: 'Path to OpenAPI specification file (optional, defaults to src/open_api_spec.yml)'
+        required: false
+        type: string
+        default: 'src/open_api_spec.yml'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  build-openapi-client:
+    name: "🐍 📦 Build OpenAPI Client"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: SetUp Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Build OpenAPI Client
+        run: |
+          chmod +x ./scripts/build_open_api_client.sh
+          ./scripts/build_open_api_client.sh
+
+      - name: Determine version and paths
+        id: meta
+        run: |
+          echo "VERSION=$(python setup.py --version)" >> $GITHUB_ENV
+          echo "CLIENT_DIR=metadata-client" >> $GITHUB_ENV
+          echo "WHEEL_PATH=$(ls -1 metadata-client/dist/*.whl | head -n1)" >> $GITHUB_ENV
+          echo "SDIST_PATH=$(ls -1 metadata-client/dist/*.tar.gz | head -n1)" >> $GITHUB_ENV
+
+      - name: Print built artifacts
+        run: |
+          ls -la metadata-client/dist
+          echo "Detected VERSION=$VERSION"
+          echo "WHEEL_PATH=$WHEEL_PATH"
+          echo "SDIST_PATH=$SDIST_PATH"
+
+      - name: Upload client artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-client-${{ env.VERSION }}
+          path: |
+            metadata-client/dist/*.whl
+            metadata-client/dist/*.tar.gz
+          if-no-files-found: error
