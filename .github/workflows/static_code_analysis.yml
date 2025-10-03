@@ -4,16 +4,14 @@ name: 🛠️ Static Code Analysis
 on:
   workflow_call:
     build_and_install_script:
-      description: 'Whether to build and install the client package'
+      description: 'Path from the root of the repository to the script to build and install project the packages'
       required: false
-      type: boolean
-      default: false
+      type: string
   workflow_dispatch:
     build_and_install_script:
-      description: 'Whether to build and install the client package'
+      description: 'Path from the root of the repository to the script to build and install project the packages'
       required: false
-      type: boolean
-      default: false
+      type: string
 
 permissions:
   id-token: write
