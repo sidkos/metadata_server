@@ -72,6 +72,8 @@ jobs:
       POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
       POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
       POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+      METADATA_PORT: ${{ vars.METADATA_PORT }}
+      METADATA_HOST: ${{ vars.METADATA_HOST }}
 
     steps:
       - name: SetUp Python Project

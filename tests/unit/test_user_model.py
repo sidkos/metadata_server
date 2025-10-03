@@ -1,6 +1,7 @@
+import os
 import pytest
 from metadata_client.models import User
-from metadata_client import AuthenticatedClient
+from metadata_client import Client
 from metadata_client.api.users import (
     users_create,
     users_list,
@@ -11,8 +12,8 @@ from metadata_client.api.users import (
 
 @pytest.fixture
 def client():
-    # You may need to pass auth params if required by your API
-    return AuthenticatedClient()
+    base_url = os.environ.get("API_BASE_URL", f"http://{os.environ["METADATA_HOST"]}:{os.environ["METADATA_PORT"]}")
+    return Client(base_url=base_url)
 
 
 @pytest.mark.usefixtures("db")
