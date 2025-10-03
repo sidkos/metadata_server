@@ -16,7 +16,14 @@ jobs:
     secrets: inherit
 
   openapi-validation:
-    uses: sidkos/metadata_server/.github/workflows/openapi_validation_workflow.yml@main
+    uses: sidkos/metadata_server/.github/workflows/openapi_validation.yml@main
     with:
       open_api_spec_file: "src/open_api_spec.yml"
+    secrets: inherit
+
+  unit-tests:
+    uses: sidkos/metadata_server/.github/workflows/unit_tests_on_docker.yml@main
+    with:
+      compose_file_path: 'docker-compose.yml'
+      tests_host_name: 'metadata_manager'
     secrets: inherit

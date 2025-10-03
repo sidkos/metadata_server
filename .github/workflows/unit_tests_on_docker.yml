@@ -1,0 +1,105 @@
+name: 🧩 🔍 🐳 Unit Tests on Docker
+run-name: "Command: ${{ inputs.tests_command }} Context: ${{ inputs.context }}"
+
+on:
+  workflow_call:
+    inputs:
+      compose_file_path:
+        description: 'Path to the docker compose file'
+        required: true
+        type: string
+        default: 'docker-compose.yml'
+      tests_host_name:
+        description: 'Name of the host to run the tests on'
+        required: true
+        type: string
+      context:
+        description: 'Context to run the tests in'
+        required: false
+        type: string
+        default: './tests/unit'
+      tests_command:
+        description: 'Command to run the tests'
+        required: false
+        type: string
+        default: 'pytest'
+
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        type: string
+      compose_file_path:
+        description: 'Path to the docker compose file'
+        required: true
+        type: string
+        default: 'docker-compose.yml'
+      tests_host_name:
+        description: 'Name of the host to run the tests on'
+        required: true
+        type: string
+      context:
+        description: 'Context to run the tests in'
+        required: false
+        type: string
+        default: './tests/unit'
+      tests_command:
+        description: 'Command to run the tests'
+        required: false
+        type: string
+        default: "pytest"
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  unit-tests-workflow:
+    name: "🧩 🔍 🐳 Unit Tests on Docker"
+    runs-on:
+      group: 'ubuntu-latest'
+    timeout-minutes: 40
+
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          token: ${{ secrets.ACTIONS_TOKEN }}
+          fetch-depth: 0
+          submodules: 'true'
+
+      - name: Print runner user and it's HOME
+        run: |
+          whoami
+          echo $HOME
+
+      - name: Print runner user home directory contents
+        run: ls -lah $HOME
+
+      - name: Docker Compose Build
+        run: docker compose -f ${{inputs.compose_file_path}} build
+
+      - name: Docker Compose Up
+        run: docker compose -f ${{inputs.compose_file_path}} up -d
+
+      - name: Set CONTAINER_ID env vars
+        run: |
+          CONTAINER_ID=$(docker ps -qf "name=${{inputs.tests_host_name}}")
+          echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
+
+      - name: Print CONTAINER_ID
+        run: echo "CONTAINER_ID is ${{ env.CONTAINER_ID }}"
+
+      - name: Print Docker User
+        run: docker exec ${{env.CONTAINER_ID}} whoami
+
+      - name: Print Docker User Home Directory contents
+        run: docker exec ${{env.CONTAINER_ID}} ls -lah /
+
+      - name: Run Unit Tests
+        run: "docker exec ${{ env.CONTAINER_ID }} python -m ${{ inputs.tests_command }} ${{ inputs.context }}"
