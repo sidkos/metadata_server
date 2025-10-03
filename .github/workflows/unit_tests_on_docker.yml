@@ -128,6 +128,7 @@ jobs:
             if curl -fsS "http://${{ env.METADATA_HOST }}:${{ env.METADATA_PORT }}/api/health/" >/dev/null; then
               echo "Server is ready"; exit 0
             fi
+            sleep 1
           done
           echo "Server did not become ready in time"; exit 1
 
