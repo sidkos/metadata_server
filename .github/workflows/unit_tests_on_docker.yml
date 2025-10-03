@@ -67,8 +67,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.BRANCH_NAME }}
-          token: ${{ secrets.ACTIONS_TOKEN }}
           fetch-depth: 0
           submodules: 'true'
 
