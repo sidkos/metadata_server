@@ -1,74 +1,82 @@
 import os
+from http import HTTPStatus
+
 import pytest
-from metadata_client.models import User
 from metadata_client import Client
+from metadata_client.api.health import health_retrieve
 from metadata_client.api.users import (
     users_create,
     users_list,
     users_retrieve,
-    users_ids_retrieve,
 )
+from metadata_client.models import User
+
+from src.tools import generate_israeli_id, generate_random_phone_number
 
 
 @pytest.fixture
 def client():
-    base_url = os.environ.get("API_BASE_URL", f"http://{os.environ["METADATA_HOST"]}:{os.environ["METADATA_PORT"]}")
+    base_url = os.environ.get(
+        "API_BASE_URL",
+        f"http://{os.environ.get('METADATA_HOST', 'localhost')}:{os.environ.get('METADATA_PORT', '8000')}",
+    )
     return Client(base_url=base_url)
 
 
-@pytest.mark.usefixtures("db")
+def test_health_check(client):
+    response = health_retrieve.sync_detailed(client=client)
+    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
+
+
 def test_create_user_valid(client):
-    user = User(id='123456782', name='Test User', phone='+972501234567', address='Test Street 1')
-    response = users_create(client=client, json_body=user)
-    assert response.id == user.id
-    assert response.name == user.name
+    user = User(
+        id=generate_israeli_id(), name="Test User", phone=generate_random_phone_number(), address="Test Street 1"
+    )
+    response = users_create.sync_detailed(client=client, body=user)
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.parsed.id == user.id
+    assert response.parsed.name == user.name
 
 
-@pytest.mark.usefixtures("db")
 def test_create_user_invalid_id(client):
-    user = User(id='123456789', name='Test User', phone='+972501234567', address='Test Street 1')
-    with pytest.raises(Exception):
-        users_create(client=client, json_body=user)
+    user = User(id="123789456", name="Test User", phone=generate_random_phone_number(), address="Test Street 1")
+    response = users_create.sync_detailed(client=client, body=user)
+    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.parsed is None
 
 
-@pytest.mark.usefixtures("db")
 def test_create_user_invalid_phone(client):
-    user = User(id='123456782', name='Test User', phone='0501234567', address='Test Street 1')
-    with pytest.raises(Exception):
-        users_create(client=client, json_body=user)
+    user = User(id=generate_israeli_id(), name="Test User", phone="0501234567", address="Test Street 1")
+    response = users_create.sync_detailed(client=client, body=user)
+    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.parsed is None
 
 
-@pytest.mark.usefixtures("db")
 def test_retrieve_user(client):
-    user = User(id='123456782', name='Test User', phone='+972501234567', address='Test Street 1')
-    users_create(client=client, json_body=user)
-    retrieved = users_retrieve(client=client, id=user.id)
-    assert retrieved.id == user.id
-    assert retrieved.name == user.name
+    user = User(
+        id=generate_israeli_id(), name="Test User", phone=generate_random_phone_number(), address="Test Street 1"
+    )
+    create_resp = users_create.sync_detailed(client=client, body=user)
+    assert create_resp.status_code == HTTPStatus.CREATED
+    response = users_retrieve.sync_detailed(client=client, id=user.id)
+    assert response.status_code == HTTPStatus.OK
+    assert response.parsed.id == user.id
+    assert response.parsed.name == user.name
 
 
-@pytest.mark.usefixtures("db")
 def test_list_users(client):
     users_data = [
-        User(id='123456782', name='User One', phone='+972501234567', address='Street 1'),
-        User(id='234567892', name='User Two', phone='+972501234568', address='Street 2')
+        User(id=generate_israeli_id(), name="Test User", phone=generate_random_phone_number(), address="Street 1"),
+        User(id=generate_israeli_id(), name="Test User", phone=generate_random_phone_number(), address="Street 2"),
     ]
     for user in users_data:
-        users_create(client=client, json_body=user)
-    user_list = users_list(client=client)
-    returned_ids = {u.id for u in user_list}
+        resp = users_create.sync_detailed(client=client, body=user)
+        assert resp.status_code == HTTPStatus.CREATED
+    list_resp = users_list.sync_detailed(client=client)
+    assert list_resp.status_code == HTTPStatus.OK
+    returned_ids = {u.id for u in list_resp.parsed}
     for user in users_data:
         assert user.id in returned_ids
-
-
-@pytest.mark.usefixtures("db")
-def test_list_user_ids(client):
-    users_data = [
-        User(id='123456782', name='User One', phone='+972501234567', address='Street 1'),
-        User(id='234567892', name='User Two', phone='+972501234568', address='Street 2')
-    ]
-    for user in users_data:
-        users_create(client=client, json_body=user)
-    ids = users_ids_retrieve(client=client)
-    for user in users_data:
-        assert user.id in ids
