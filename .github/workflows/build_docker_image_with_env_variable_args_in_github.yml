@@ -1,0 +1,81 @@
+name: 🐳 🏗️ Build Docker image and push to ECR
+run-name: "Image Name: ${{inputs.image_name}}"
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: 'Name of the image to build'
+        required: true
+        type: string
+      context:
+        description: 'Context to build the image in'
+        required: false
+        type: string
+        default: '.'
+      file:
+        description: "Path to the Dockerfile"
+        required: false
+        type: string
+        default: "Dockerfile"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  build-image:
+    name: "🐳 🏗️ build-image"
+    runs-on:
+      group: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Print working directory
+        run: pwd
+        shell: bash
+
+      - name: List files in the working directory
+        run: ls -la
+        shell: bash
+
+      - name: Select correct Version for a TAG from setup.py file
+        run: echo "TAG=$(python setup.py --version)-${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Login to GitHub Container Registry (GHCR)
+        run: echo " ${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Save github.repository_owner in lowercase to $GITHUB_ENV
+        run: echo "REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Print REPOSITORY_OWNER
+        run: echo "REPOSITORY_OWNER is $REPOSITORY_OWNER"
+
+      - name: Build, tag, and push image to Amazon ECR With Version TAG
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          file: "${{ inputs.file }}"
+          context: "${{ inputs.context }}"
+          push: false
+          tags: |
+            ghcr.io/${{ env.REPOSITORY_OWNER }}/${{ inputs.image_name }}:${{ env.TAG }}
+            ghcr.io/${{ env.REPOSITORY_OWNER }}/${{ inputs.image_name }}:latest
+          build-args: |
+            ${{ env.ARGS }}
+
+      - name: Push Docker Image to GHCR
+        run: |
+          docker push ghcr.io/${{ env.REPOSITORY_OWNER }}/${{ inputs.image_name }}:${{ env.TAG }}
+        shell: bash
+
+      - name: Push Docker Image to GHCR as latest if PHENO_ENVIRONMENT_NAME is not dev
+        run: |
+          docker push ghcr.io/${{ env.REPOSITORY_OWNER }}/${{ inputs.image_name }}:latest
