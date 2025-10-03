@@ -19,7 +19,7 @@ jobs:
 
       - name: Validate OpenAPI Spec
         run: |
-          python manage.py spectacular --file ${{ inputs.open_api_spec_file }}
+          python src/manage.py spectacular --file ${{ inputs.open_api_spec_file }}
 
           if ! git diff --exit-code --quiet ${{ inputs.open_api_spec_file }}; then
               echo "OpenAPI specification has changed. Please run 'python manage.py spectacular --file ${{ inputs.open_api_spec_file }}' and commit the changes."
