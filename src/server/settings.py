@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "metadata_manager",
     "drf_spectacular",
     "metadata_manager.apps.MetadataManagerConfig",
 ]
