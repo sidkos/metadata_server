@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "metadata_manager",
     "drf_spectacular",
+    "metadata_manager.apps.MetadataManagerConfig",
 ]
 
 MIDDLEWARE = [
