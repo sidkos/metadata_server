@@ -23,16 +23,8 @@ jobs:
   build-server-image:
     name: 🏗️ 🖼️ Build Server Docker Image
 #    needs: ci
-    uses: sidkos/metadata_server/.github/workflows/build_docker_image_store_in_github.yml@main
+    uses: sidkos/metadata_server/.github/workflows/build_docker_image_with_env_variable_args_in_github.yml@main
     with:
       file: "Dockerfile"
       image_name: "metadata_server"
-    secrets: inherit
-
-  build-openapi-client:
-    name: 🐍 📦 Build OpenAPI Client and store artifacts
-#    needs: ci
-    uses: sidkos/metadata_server/.github/workflows/build_openapi_client_store_in_github.yml@main
-    with:
-      open_api_spec_file: "src/open_api_spec.yml"
     secrets: inherit
