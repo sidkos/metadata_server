@@ -55,11 +55,10 @@ permissions:
   contents: write
 
 jobs:
-  unit-tests-workflow:
+  unit-tests:
     name: "🧩 🔍 🐳 Unit Tests on Docker"
-    runs-on:
-      group: 'ubuntu-latest'
-    timeout-minutes: 40
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     defaults:
       run:

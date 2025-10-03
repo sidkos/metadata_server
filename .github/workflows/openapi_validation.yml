@@ -12,6 +12,9 @@ jobs:
   openapi-validation:
     name: "📜 🔍 OpenAPI Validation"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: SetUp Python Project
