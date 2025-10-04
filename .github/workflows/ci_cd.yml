@@ -15,22 +15,22 @@ permissions:
   packages: write
 
 jobs:
-  ci:
-    name: 🛠️ CI
-    uses: sidkos/metadata_server/.github/workflows/ci.yml@main
-    secrets: inherit
-
-  build-server-image:
-    name: 🏗️ 🖼️ Build Server Docker Image
-    needs: ci
-    uses: sidkos/metadata_server/.github/workflows/build_docker_image.yml@main
-    with:
-      file: "Dockerfile"
-      image_name: "metadata_server"
-    secrets: inherit
+#  ci:
+#    name: 🛠️ CI
+#    uses: sidkos/metadata_server/.github/workflows/ci.yml@main
+#    secrets: inherit
+#
+#  build-server-image:
+#    name: 🏗️ 🖼️ Build Server Docker Image
+#    needs: ci
+#    uses: sidkos/metadata_server/.github/workflows/build_docker_image.yml@main
+#    with:
+#      file: "Dockerfile"
+#      image_name: "metadata_server"
+#    secrets: inherit
 
   build-openapi-client:
     name: 🧰 📦 Build & Publish OpenAPI Client
-    needs: ci
+#    needs: ci
     uses: sidkos/metadata_server/.github/workflows/build_openapi_client_publish.yml@main
     secrets: inherit
