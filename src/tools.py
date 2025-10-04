@@ -67,7 +67,7 @@ def generate_israeli_id(from_right: bool = True) -> str:
     Raises:
         RuntimeError: If a valid check digit cannot be computed (unexpected).
     """
-    # Generate first 8 digits
+
     first8 = [random.randint(0, 9) for _ in range(8)]
     # Try check digit 0..9 to make whole 9-digit valid
     for check in range(10):
@@ -75,5 +75,5 @@ def generate_israeli_id(from_right: bool = True) -> str:
         candidate = "".join(str(d) for d in digits)
         if is_valid_israeli_id(candidate, from_right=from_right):
             return candidate
-    # Should never happen, but fall back to deterministic compute (safe)
+
     raise RuntimeError("Failed to compute a check digit (unexpected)")

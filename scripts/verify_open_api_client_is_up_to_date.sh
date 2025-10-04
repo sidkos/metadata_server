@@ -12,7 +12,6 @@ current_hash() {
     fi
 }
 
-# if the spec file does not exist raise error
 if [ ! -f "$SPEC_FILE" ]; then
     echo "The OpenAPI spec file does not exist. Please generate it first."
     exit 1
