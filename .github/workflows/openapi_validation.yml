@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: SetUp Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@authentication
 
       - name: Validate OpenAPI Spec
         run: |
