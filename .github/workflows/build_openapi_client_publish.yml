@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: 'tags'
+      registry_scope:
+        description: 'Registry path scope: owner (default) or repo (owner/repo)'
+        required: false
+        type: string
+        default: 'owner'
   workflow_dispatch:
 
 permissions:
@@ -45,7 +50,7 @@ jobs:
           name: metadata-client-dist
           path: metadata-client/dist/*
 
-      - name: Resolve OWNER and VERSION
+      - name: Resolve OWNER/REPO, VERSION, and REPO_URL
         id: meta
         run: |
           OWNER_INPUT="${{ inputs.repository_owner_override }}"
@@ -53,9 +58,26 @@ jobs:
           OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
           echo "owner_lc=$OWNER_LC" >> "$GITHUB_OUTPUT"
 
+          # Derive repo name from <owner>/<repo>
+          REPO_FULL='${{ github.repository }}'
+          REPO=${REPO_FULL#*/}
+          REPO_LC=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
+          echo "repo_lc=$REPO_LC" >> "$GITHUB_OUTPUT"
+
+          # Compute registry URL based on selected scope
+          SCOPE='${{ inputs.registry_scope }}'
+          if [[ "$SCOPE" == "repo" ]]; then
+            REPO_URL="https://pypi.pkg.github.com/${OWNER_LC}/${REPO_LC}/"
+          else
+            REPO_URL="https://pypi.pkg.github.com/${OWNER_LC}/"
+          fi
+          echo "repo_url=$REPO_URL" >> "$GITHUB_OUTPUT"
+
           VERSION=$(python setup.py --version)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Detected version: $VERSION"
+          echo "Using registry scope: $SCOPE"
+          echo "Resolved upload URL: $REPO_URL"
 
       - name: Install Twine
         run: python -m pip install --upgrade twine
@@ -92,8 +114,9 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || steps.meta.outputs.owner_lc }}
           TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
-          REPO_URL: https://pypi.pkg.github.com/${{ steps.meta.outputs.owner_lc }}/
+          REPO_URL: ${{ steps.meta.outputs.repo_url }}
         run: |
+          echo "Uploading to: $REPO_URL"
           python -m twine upload \
             --repository-url "$REPO_URL" \
             metadata-client/dist/*
