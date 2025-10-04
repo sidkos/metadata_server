@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# 1) Build and install metadata-client first (dp-client depends on it)
 echo "[dp-client] Building and installing metadata-client (dependency) ..."
 ./scripts/build_and_install_open_api_client.sh
 
@@ -22,7 +21,7 @@ if [[ -n "${PYVER}" ]]; then
 else
   echo "[dp-client] Installing wheel (Python version unknown)"
 fi
-# Install without resolving dependencies since metadata-client was already installed locally above
+
 pip install --no-deps "${WHEEL}" --force-reinstall
 
 echo "[dp-client] Verifying installation..."

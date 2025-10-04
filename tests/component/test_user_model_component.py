@@ -11,7 +11,7 @@ from src.tools import generate_israeli_id, generate_random_phone_number
 # Always keep a consistent, typed value to satisfy mypy.
 PSYCOPG2_ERRORS: tuple[type[BaseException], ...] = tuple()
 try:
-    import psycopg2  # type: ignore
+    import psycopg2
 
     PSYCOPG2_ERRORS = (
         psycopg2.OperationalError,

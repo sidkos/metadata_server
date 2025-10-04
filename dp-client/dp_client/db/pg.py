@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import socket
-from typing import Iterable, Optional
+from typing import Iterable, Optional, cast
 
 from .drivers.postgres import PostgresDriver
 
@@ -67,8 +67,6 @@ class PGDBClient:
             "on",
         }
         # At this point, required parameters are present; narrow Optional types for type-checker
-        from typing import cast
-
         final_host_str = cast(str, final_host)
         final_port_int = cast(int, final_port)
         final_db_str = cast(str, final_db)
@@ -99,7 +97,6 @@ class PGDBClient:
         )
         if not row:
             return None
-        # Return a simple dict to avoid coupling
         return {"id": row[0], "name": row[1], "phone": row[2], "address": row[3]}
 
     def users_exist(self, user_ids: Iterable[str]) -> bool:

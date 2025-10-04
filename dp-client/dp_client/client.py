@@ -28,21 +28,13 @@ class DPClient:
         prefix: str = "Bearer",
         timeout: float = 10.0,
     ) -> None:
-        # Build the underlying metadata server client
         self._client_factory = MetaDataServerAPIClientFactory()
         self.MetaDataServerAPIClient: Any = self._client_factory.build(base_url=base_url, token=token, prefix=prefix)
-
-        # Compose API domains
         self.UsersApi = UsersAPI(self.MetaDataServerAPIClient)
         self.HealthAPI = HealthAPI(self.MetaDataServerAPIClient)
-
-        # DB helper (optional, raises clear error if ORM not available when used)
         self.PGDBClient = PGDBClient()
-
-        # Store timeout for potential future use (e.g., retries)
         self._timeout = timeout
 
-    # Backward-compatible thin wrappers
     def health_check(self):
         return self.HealthAPI.health_check()
 
