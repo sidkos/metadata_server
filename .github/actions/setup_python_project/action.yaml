@@ -12,20 +12,26 @@ runs:
       id: detect_python
       shell: bash
       run: |
-        SPEC=$(grep -Po "python_requires\s*=\s*['\"][^'\"]+['\"]" setup.py | sed -E "s/.*=['\"]([^'\"]+)['\"].*/\1/")
-        if [[ -z "$SPEC" ]]; then
-          echo "Could not find python_requires in setup.py" >&2
-          exit 1
-        fi
-        if [[ "$SPEC" =~ ^==([0-9]+\.[0-9]+) ]]; then
-          V="${BASH_REMATCH[1]}"
-        elif [[ "$SPEC" =~ >?=([0-9]+\.[0-9]+) ]]; then
-          V="${BASH_REMATCH[1]}"
-        else
-          echo "Unsupported python_requires format: $SPEC" >&2
-          exit 1
-        fi
-        echo "version=$V" >> "$GITHUB_OUTPUT"
+        python - <<'PY' >> "$GITHUB_OUTPUT"
+        import re, sys
+        from pathlib import Path
+
+        txt = Path('setup.py').read_text(encoding='utf-8')
+        m = re.search(r"python_requires\s*=\s*['\"]([^'\"]+)['\"]", txt)
+        if not m:
+            print("Could not find python_requires in setup.py", file=sys.stderr)
+            sys.exit(1)
+        spec = m.group(1).strip()
+        # Prefer exact pin ==X.Y, else take lower bound >=X.Y
+        m2 = re.match(r"==\s*([0-9]+\.[0-9]+)", spec)
+        if not m2:
+            m2 = re.search(r">=\s*([0-9]+\.[0-9]+)", spec)
+        if not m2:
+            print(f"Unsupported python_requires format: {spec}", file=sys.stderr)
+            sys.exit(1)
+        version = m2.group(1)
+        print(f"version={version}")
+        PY
 
     - name: Setup Python
       uses: actions/setup-python@v4
