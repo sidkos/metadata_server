@@ -9,6 +9,8 @@ paths:
       description: Health check GET method.
       tags:
       - health
+      security:
+      - bearerAuth: []
       responses:
         '200':
           content:
@@ -139,8 +141,8 @@ paths:
       tags:
       - schema
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - bearerAuth: []
+      - bearerAuth: []
       - {}
       responses:
         '200':
@@ -162,6 +164,52 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/token/:
+    post:
+      operationId: token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
   /api/users/:
     get:
       operationId: users_list
@@ -169,9 +217,8 @@ paths:
       tags:
       - users
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           content:
@@ -193,9 +240,8 @@ paths:
               $ref: '#/components/schemas/User'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - bearerAuth: []
+      - bearerAuth: []
       responses:
         '201':
           content:
@@ -216,9 +262,8 @@ paths:
       tags:
       - users
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           content:
@@ -233,9 +278,8 @@ paths:
       tags:
       - users
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - bearerAuth: []
+      - bearerAuth: []
       responses:
         '200':
           content:
@@ -252,6 +296,38 @@ components:
           type: string
       required:
       - status
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
     User:
       type: object
       description: Serializer for the User model.
@@ -278,10 +354,7 @@ components:
       - name
       - phone
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
+      scheme: bearer
+      bearerFormat: JWT

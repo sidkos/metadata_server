@@ -28,7 +28,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
-    command: bash -c "python src/manage.py migrate && python src/manage.py runserver 0.0.0.0:8000"
+      TEST_USERNAME: ${TEST_USERNAME}
+      TEST_PASSWORD: ${TEST_PASSWORD}
+    command: >-
+      bash -lc 'python src/manage.py migrate && if [ -n "$TEST_USERNAME" ] && [ -n "$TEST_PASSWORD" ]; then python src/manage.py shell -c "from django.contrib.auth import get_user_model; import os; U=get_user_model(); u=os.environ.get(\"TEST_USERNAME\"); p=os.environ.get(\"TEST_PASSWORD\"); user, created = U.objects.get_or_create(username=u, defaults={\"is_staff\": True, \"is_superuser\": True}); user.set_password(p); user.save(); print(\"Test user ensured:\", user.username)"; else echo "TEST_USERNAME/TEST_PASSWORD not set; skipping test user creation"; fi && python src/manage.py runserver 0.0.0.0:8000'
     volumes:
       - ./src:/app/src
     ports:
