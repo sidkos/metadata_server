@@ -28,3 +28,15 @@ jobs:
       file: "Dockerfile"
       image_name: "metadata_server"
     secrets: inherit
+
+  component-tests:
+    name: 🧩 🔍 Component Tests
+    needs: build-server-image
+    uses: sidkos/metadata_server/.github/workflows/component_tests.yml@main
+    with:
+      image_name: "metadata_server"
+      image_tag: "latest"
+      tests_path: "./tests/component"
+      tests_command: "pytest"
+      build_and_install_script: "./scripts/build_and_install_dp_client.sh"
+    secrets: inherit
