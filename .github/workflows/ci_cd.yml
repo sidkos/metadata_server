@@ -31,7 +31,7 @@ jobs:
 
   component-tests:
     name: 🧩 🔍 Component Tests
-    needs: build-server-image
+#    needs: build-server-image
     uses: sidkos/metadata_server/.github/workflows/component_tests.yml@add-dp-client
     with:
       image_name: "metadata_server"
