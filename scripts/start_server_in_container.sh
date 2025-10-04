@@ -14,8 +14,12 @@ python src/manage.py migrate --noinput
 if [[ -n "${TEST_USERNAME:-}" && -n "${TEST_PASSWORD:-}" ]]; then
   echo "[container] Ensuring test user ${TEST_USERNAME} exists..."
   python - <<'PY'
-from django.contrib.auth import get_user_model
 import os
+# Ensure Django is configured for standalone script execution
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
+import django
+django.setup()
+from django.contrib.auth import get_user_model
 U = get_user_model()
 u = os.environ.get('TEST_USERNAME')
 p = os.environ.get('TEST_PASSWORD')
