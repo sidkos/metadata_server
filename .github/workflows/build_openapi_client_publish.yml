@@ -121,5 +121,5 @@ jobs:
         run: |
           echo "Uploading to: $REPO_URL/metadata_server"
           python -m twine upload \
-            --repository-url "$REPO_URL/metadata_server" \
+            --repository-url https://pypi.pkg.github.com/sidkos/metadata_server   \
             metadata-client/dist/*
