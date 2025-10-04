@@ -108,9 +108,6 @@ jobs:
       - name: SetUp Python Project
         uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Print runner env
         run: env | sort
 
@@ -123,14 +120,14 @@ jobs:
 
       - name: Pull server image
         run: |
-          IMAGE_REF="ghcr.io/${{ github.repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"
+          IMAGE_REF="ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"
           echo "Pulling $IMAGE_REF"
           docker pull "$IMAGE_REF"
           echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
 
       - name: Run server container
         run: |
-          DB_PORT=${{ env.METADATA_PORT }}
+          DB_PORT=${{ env.POSTGRES_PORT }}
           docker run -d --name metadata-server \
             --add-host=host.docker.internal:host-gateway \
             -p 8000:8000 \
