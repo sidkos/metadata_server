@@ -116,7 +116,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
           REPO_URL: ${{ steps.meta.outputs.repo_url }}
         run: |
-          echo "Uploading to: $REPO_URL/${{ GITHUB_REPOSITORY }}"
+          echo "Uploading to: $REPO_URL"
           python -m twine upload \
-            --repository-url "$REPO_URL/${{ GITHUB_REPOSITORY }}" \
+            --repository-url "$REPO_URL" \
             metadata-client/dist/*
