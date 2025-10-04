@@ -141,8 +141,9 @@ jobs:
             -e POSTGRES_PORT="$DB_PORT" \
             -e TEST_USERNAME="${{ env.TEST_USERNAME }}" \
             -e TEST_PASSWORD="${{ env.TEST_PASSWORD }}" \
+            -v "${{ github.workspace }}/scripts:/app/scripts:ro" \
             "$IMAGE_REF" \
-            bash -lc 'python src/manage.py migrate && if [ -n "$TEST_USERNAME" ] && [ -n "$TEST_PASSWORD" ]; then python src/manage.py shell -c "from django.contrib.auth import get_user_model; import os; U=get_user_model(); u=os.environ.get(\"TEST_USERNAME\"); p=os.environ.get(\"TEST_PASSWORD\"); user, created = U.objects.get_or_create(username=u, defaults={\"is_staff\": True, \"is_superuser\": True}); user.set_password(p); user.save(); print(\"Test user ensured:\", user.username)"; else echo "TEST_USERNAME/TEST_PASSWORD not set; skipping test user creation"; fi && python src/manage.py runserver 0.0.0.0:8000'
+            bash /app/scripts/start_server_in_container.sh
 
       - name: Wait for server to be ready
         run: |

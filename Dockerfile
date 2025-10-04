@@ -8,6 +8,8 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY src/ ./src/
+COPY scripts/start_server_in_container.sh /app/scripts/start_server_in_container.sh
+RUN chmod +x /app/scripts/start_server_in_container.sh
 
-CMD ["bash", "-c", "python src/manage.py migrate && python src/manage.py runserver 0.0.0.0:8000"]
+CMD ["bash", "/app/scripts/start_server_in_container.sh"]
 
