@@ -32,9 +32,6 @@ jobs:
         shell: bash
 
     steps:
-      - name: Print all env  variable values
-        run: env | sort
-
       - name: Setup Python Project
         uses: sidkos/metadata_server/.github/actions/setup_python_project@add-client-buid
 
@@ -119,7 +116,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
           REPO_URL: ${{ steps.meta.outputs.repo_url }}
         run: |
-          echo "Uploading to: $REPO_URL/${GITHUB_REPOSITORY#*/"
+          echo "Uploading to: $REPO_URL/${{ GITHUB_REPOSITORY }}"
           python -m twine upload \
-            --repository-url "$REPO_URL/${GITHUB_REPOSITORY#*/" \
+            --repository-url "$REPO_URL/${{ GITHUB_REPOSITORY }}" \
             metadata-client/dist/*
