@@ -1,8 +1,6 @@
-import os
 from http import HTTPStatus
 
 import pytest
-import requests
 from metadata_client import AuthenticatedClient, Client
 from metadata_client.api.health import health_retrieve
 from metadata_client.api.users import (
@@ -16,35 +14,13 @@ from src.tools import generate_israeli_id, generate_random_phone_number
 
 
 @pytest.fixture
-def base_url() -> str:
-    return os.environ.get(
-        "API_BASE_URL",
-        f"http://{os.environ.get('METADATA_HOST', 'localhost')}:{os.environ.get('METADATA_PORT', '8000')}",
-    )
-
-
-@pytest.fixture
 def non_authenticated_client(base_url: str):
     return Client(base_url=base_url)
 
 
 @pytest.fixture
-def client(base_url: str):
-    token = os.environ.get("API_TOKEN")
-    if not token:
-        username = os.environ.get("TEST_USERNAME")
-        password = os.environ.get("TEST_PASSWORD")
-        if not username or not password:
-            raise RuntimeError("TEST_USERNAME/TEST_PASSWORD or API_TOKEN must be set for authenticated tests")
-        resp = requests.post(
-            f"{base_url}/api/token/",
-            json={"username": username, "password": password},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        token = resp.json()["access"]
-
-    return AuthenticatedClient(base_url=base_url, token=token, prefix="Bearer")
+def client(base_url: str, auth_token: str):
+    return AuthenticatedClient(base_url=base_url, token=auth_token, prefix="Bearer")
 
 
 def test_health_check(non_authenticated_client):
