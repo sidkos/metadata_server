@@ -48,6 +48,11 @@ jobs:
         run: |
           ls -lah metadata-client/dist || true
 
+      - name: Verify built distributions exist
+        run: |
+          test -d metadata-client/dist || { echo "No dist directory found under metadata-client/"; exit 1; }
+          ls -1 metadata-client/dist/* >/dev/null 2>&1 || { echo "No distribution files built under metadata-client/dist"; exit 1; }
+
       - name: Upload artifacts (always)
         uses: actions/upload-artifact@v4
         with:
