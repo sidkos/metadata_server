@@ -1,0 +1,75 @@
+name: "🧰 📦 Build & Publish OpenAPI Python Client"
+
+on:
+  workflow_call:
+    inputs:
+      repository_owner_override:
+        description: 'Override OWNER part of pypi.pkg.github.com/<OWNER> (defaults to repository owner)'
+        required: false
+        type: string
+      upload_when:
+        description: 'When to publish: tags|always|never (default: tags)'
+        required: false
+        type: string
+        default: 'tags'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    name: "🧰 Build client and publish to GitHub Packages"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Setup Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Build OpenAPI client (using repo script)
+        run: |
+          chmod +x ./scripts/build_open_api_client.sh
+          ./scripts/build_open_api_client.sh
+
+      - name: Show built artifacts
+        run: |
+          ls -lah metadata-client/dist || true
+
+      - name: Upload artifacts (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata-client-dist
+          path: metadata-client/dist/*
+
+      - name: Resolve OWNER and VERSION
+        id: meta
+        run: |
+          OWNER_INPUT="${{ inputs.repository_owner_override }}"
+          OWNER=${OWNER_INPUT:-${{ github.repository_owner }}}
+          OWNER_LC=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
+          echo "owner_lc=$OWNER_LC" >> "$GITHUB_OUTPUT"
+
+          VERSION=$(python setup.py --version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $VERSION"
+
+      - name: Install Twine
+        run: python -m pip install --upgrade twine
+
+      - name: Publish to GitHub Packages (on tags by default)
+        if: |
+          (inputs.upload_when == 'always') ||
+          (inputs.upload_when == 'tags' && startsWith(github.ref, 'refs/tags/'))
+        env:
+          TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || github.actor }}
+          TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
+          REPO_URL: https://pypi.pkg.github.com/${{ steps.meta.outputs.owner_lc }}/
+        run: |
+          python -m twine upload \
+            --repository-url "$REPO_URL" \
+            --skip-existing \
+            metadata-client/dist/*
