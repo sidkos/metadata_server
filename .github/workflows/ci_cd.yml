@@ -29,7 +29,7 @@ jobs:
 #      image_name: "metadata_server"
 #    secrets: inherit
 #
-#  build-openapi-client:
+  build-openapi-client:
     name: 🧰 📦 Build & Publish OpenAPI Client
 #    needs: ci
     uses: sidkos/metadata_server/.github/workflows/build_openapi_client_publish.yml@add-client-buid
