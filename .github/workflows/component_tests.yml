@@ -82,6 +82,8 @@ jobs:
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd="pg_isready -U ${{ vars.POSTGRES_USER }}"
           --health-interval=10s
@@ -97,7 +99,7 @@ jobs:
       METADATA_HOST: localhost
       METADATA_PORT: 8000
       POSTGRES_HOST: localhost
-      POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+      POSTGRES_PORT: "5432"
       POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       POSTGRES_USER: ${{ vars.POSTGRES_USER }}
       POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
@@ -128,7 +130,7 @@ jobs:
 
       - name: Run server container
         run: |
-          DB_PORT=${{ job.services.postgres.ports[5432] }}
+          DB_PORT=${{ env.METADATA_PORT }}
           docker run -d --name metadata-server \
             --add-host=host.docker.internal:host-gateway \
             -p 8000:8000 \
