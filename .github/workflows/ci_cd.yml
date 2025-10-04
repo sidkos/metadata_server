@@ -17,13 +17,13 @@ permissions:
 jobs:
   ci:
     name: 🛠️ CI
-    uses: sidkos/metadata_server/.github/workflows/ci.yml@authentication
+    uses: sidkos/metadata_server/.github/workflows/ci.yml@main
     secrets: inherit
 
   build-server-image:
     name: 🏗️ 🖼️ Build Server Docker Image
     needs: ci
-    uses: sidkos/metadata_server/.github/workflows/build_docker_image.yml@authentication
+    uses: sidkos/metadata_server/.github/workflows/build_docker_image.yml@main
     with:
       file: "Dockerfile"
       image_name: "metadata_server"

@@ -10,19 +10,19 @@ permissions:
 
 jobs:
   static_code_analysis:
-    uses: sidkos/metadata_server/.github/workflows/static_code_analysis.yml@authentication
+    uses: sidkos/metadata_server/.github/workflows/static_code_analysis.yml@main
     with:
       build_and_install_script: "./scripts/build_and_install_open_api_client.sh"
     secrets: inherit
 
   openapi-validation:
-    uses: sidkos/metadata_server/.github/workflows/openapi_validation.yml@authentication
+    uses: sidkos/metadata_server/.github/workflows/openapi_validation.yml@main
     with:
       open_api_spec_file: "src/open_api_spec.yml"
     secrets: inherit
 
   unit-tests:
-    uses: sidkos/metadata_server/.github/workflows/unit_tests_on_docker.yml@authentication
+    uses: sidkos/metadata_server/.github/workflows/unit_tests_on_docker.yml@main
     with:
       compose_file_path: 'docker-compose.yml'
       tests_host_name: 'metadata_manager'

@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: SetUp Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@authentication
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
       - name: Build and install client packages
         if: ${{ inputs.build_and_install_script }}

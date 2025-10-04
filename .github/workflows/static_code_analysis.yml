@@ -28,7 +28,7 @@ jobs:
         shell: bash
     steps:
       - name: SetUp Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@authentication
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
       - name: Build and install client packages
         if: ${{ inputs.build_and_install_script }}
@@ -36,24 +36,24 @@ jobs:
 
       - name: Run Black
         if: always()
-        uses: sidkos/metadata_server/.github/actions/black@authentication
+        uses: sidkos/metadata_server/.github/actions/black@main
 
       - name: Run Isort
         if: always()
-        uses: sidkos/metadata_server/.github/actions/isort@authentication
+        uses: sidkos/metadata_server/.github/actions/isort@main
 
       - name: Run Pycodestyle
         if: always()
-        uses: sidkos/metadata_server/.github/actions/pycodestyle@authentication
+        uses: sidkos/metadata_server/.github/actions/pycodestyle@main
 
       - name: Run Flake8
         if: always()
-        uses: sidkos/metadata_server/.github/actions/flake8@authentication
+        uses: sidkos/metadata_server/.github/actions/flake8@main
 
       - name: Run MyPy
         if: always()
-        uses: sidkos/metadata_server/.github/actions/mypy@authentication
+        uses: sidkos/metadata_server/.github/actions/mypy@main
 
       - name: Run Yaml Lint
         if: always()
-        uses: sidkos/metadata_server/.github/actions/yamllint@authentication
+        uses: sidkos/metadata_server/.github/actions/yamllint@main
