@@ -5,6 +5,7 @@ Includes user CRUD endpoints and a public health check endpoint.
 
 from __future__ import annotations
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -62,6 +63,7 @@ class HealthCheck(generics.GenericAPIView):
     authentication_classes: list[type] = []
     permission_classes: list[type] = []
 
+    @extend_schema(auth=[])
     def get(self, request: Request, *args, **kwargs) -> Response:
         """Return service status.
 

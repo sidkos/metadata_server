@@ -18,8 +18,6 @@ paths:
             Response: JSON body {"status": "ok"} with HTTP 200.
       tags:
       - health
-      security:
-      - bearerAuth: []
       responses:
         '200':
           content:
