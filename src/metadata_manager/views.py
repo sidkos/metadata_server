@@ -2,6 +2,7 @@
 
 Includes user CRUD endpoints and a public health check endpoint.
 """
+
 from __future__ import annotations
 
 from rest_framework import generics, mixins, serializers, status, viewsets

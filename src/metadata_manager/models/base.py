@@ -1,4 +1,5 @@
 """Base model mixins and shared abstractions for ORM models."""
+
 from django.db import models
 
 

@@ -2,6 +2,7 @@
 
 Defines the enhanced User model with field-level validation utilities.
 """
+
 from typing import Any
 
 import phonenumbers

@@ -2,6 +2,7 @@
 
 Includes the User model and helper validators for Israeli ID and phone numbers.
 """
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """App configuration for the metadata manager Django app."""
+
 from django.apps import AppConfig
 
 

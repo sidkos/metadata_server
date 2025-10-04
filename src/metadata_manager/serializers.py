@@ -1,4 +1,5 @@
 """Serializers for API representation of models."""
+
 from rest_framework import serializers
 
 from .models.user import User
