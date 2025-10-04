@@ -1,0 +1,163 @@
+name: 🧩 🔍 🧱 Component Tests
+run-name: "Image: ${{ inputs.image_name }}:${{ inputs.image_tag }} | Command: ${{ inputs.tests_command }} Context: ${{ inputs.tests_path }}"
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: 'Container image name (without registry and owner)'
+        required: false
+        type: string
+        default: 'metadata_server'
+      image_tag:
+        description: 'Container image tag'
+        required: false
+        type: string
+        default: 'latest'
+      tests_path:
+        description: 'Path to component tests'
+        required: false
+        type: string
+        default: './tests/component'
+      tests_command:
+        description: 'Command to run the tests'
+        required: false
+        type: string
+        default: 'pytest'
+      build_and_install_script:
+        description: 'Script to build and install client packages (dp-client)'
+        required: false
+        type: string
+        default: './scripts/build_and_install_dp_client.sh'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        type: string
+      image_name:
+        description: 'Container image name (without registry and owner)'
+        required: false
+        type: string
+        default: 'metadata_server'
+      image_tag:
+        description: 'Container image tag'
+        required: false
+        type: string
+        default: 'latest'
+      tests_path:
+        description: 'Path to component tests'
+        required: false
+        type: string
+        default: './tests/component'
+      tests_command:
+        description: 'Command to run the tests'
+        required: false
+        type: string
+        default: 'pytest'
+      build_and_install_script:
+        description: 'Script to build and install client packages (dp-client)'
+        required: false
+        type: string
+        default: './scripts/build_and_install_dp_client.sh'
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  component-tests:
+    name: "🧩 🔍 Component Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        shell: bash
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+        options: >-
+          --health-cmd="pg_isready -U ${{ vars.POSTGRES_USER }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      DJANGO_DEBUG: ${{ vars.DJANGO_DEBUG }}
+      DJANGO_ALLOWED_HOSTS: ${{ vars.DJANGO_ALLOWED_HOSTS }}
+      TEST_USERNAME: ${{ vars.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      METADATA_HOST: localhost
+      METADATA_PORT: 8000
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+      POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+
+    steps:
+      - name: SetUp Python Project
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Print runner env
+        run: env | sort
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Pull server image
+        run: |
+          IMAGE_REF="ghcr.io/${{ github.repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"
+          echo "Pulling $IMAGE_REF"
+          docker pull "$IMAGE_REF"
+          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
+
+      - name: Run server container
+        run: |
+          DB_PORT=${{ job.services.postgres.ports[5432] }}
+          docker run -d --name metadata-server \
+            --add-host=host.docker.internal:host-gateway \
+            -p 8000:8000 \
+            -e DJANGO_SECRET_KEY="${{ env.DJANGO_SECRET_KEY }}" \
+            -e DJANGO_DEBUG="${{ env.DJANGO_DEBUG }}" \
+            -e DJANGO_ALLOWED_HOSTS="${{ env.DJANGO_ALLOWED_HOSTS }}" \
+            -e POSTGRES_DB="${{ env.POSTGRES_DB }}" \
+            -e POSTGRES_USER="${{ env.POSTGRES_USER }}" \
+            -e POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}" \
+            -e POSTGRES_HOST=host.docker.internal \
+            -e POSTGRES_PORT="$DB_PORT" \
+            -e TEST_USERNAME="${{ env.TEST_USERNAME }}" \
+            -e TEST_PASSWORD="${{ env.TEST_PASSWORD }}" \
+            "$IMAGE_REF" \
+            bash -lc 'python src/manage.py migrate && if [ -n "$TEST_USERNAME" ] && [ -n "$TEST_PASSWORD" ]; then python src/manage.py shell -c "from django.contrib.auth import get_user_model; import os; U=get_user_model(); u=os.environ.get(\"TEST_USERNAME\"); p=os.environ.get(\"TEST_PASSWORD\"); user, created = U.objects.get_or_create(username=u, defaults={\"is_staff\": True, \"is_superuser\": True}); user.set_password(p); user.save(); print(\"Test user ensured:\", user.username)"; else echo "TEST_USERNAME/TEST_PASSWORD not set; skipping test user creation"; fi && python src/manage.py runserver 0.0.0.0:8000'
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -fsS "http://${{ env.METADATA_HOST }}:${{ env.METADATA_PORT }}/api/health/" >/dev/null; then
+              echo "Server is ready"; exit 0
+            fi
+            echo "Waiting for server... ($i)"; sleep 2
+          done
+          echo "Server did not become ready in time"; docker logs metadata-server || true; exit 1
+
+      - name: Build and install dp-client
+        if: ${{ inputs.build_and_install_script }}
+        run: ${{ inputs.build_and_install_script }}
+
+      - name: Run Component Tests
+        run: "python -m ${{ inputs.tests_command }} ${{ inputs.tests_path }} -s -v"
