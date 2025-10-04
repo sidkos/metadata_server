@@ -8,10 +8,29 @@ runs:
       with:
         fetch-depth: 0
 
+    - name: Detect Python version from setup.py
+      id: detect_python
+      shell: bash
+      run: |
+        SPEC=$(grep -Po "python_requires\s*=\s*['\"][^'\"]+['\"]" setup.py | sed -E "s/.*=['\"]([^'\"]+)['\"].*/\1/")
+        if [[ -z "$SPEC" ]]; then
+          echo "Could not find python_requires in setup.py" >&2
+          exit 1
+        fi
+        if [[ "$SPEC" =~ ^==([0-9]+\.[0-9]+) ]]; then
+          V="${BASH_REMATCH[1]}"
+        elif [[ "$SPEC" =~ >?=([0-9]+\.[0-9]+) ]]; then
+          V="${BASH_REMATCH[1]}"
+        else
+          echo "Unsupported python_requires format: $SPEC" >&2
+          exit 1
+        fi
+        echo "version=$V" >> "$GITHUB_OUTPUT"
+
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.13"
+        python-version: ${{ steps.detect_python.outputs.version }}
 
     - name: Upgrade pip
       run: python3 -m pip install --upgrade pip
