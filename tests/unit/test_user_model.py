@@ -24,17 +24,14 @@ def base_url() -> str:
 
 
 @pytest.fixture
-def anon_client(base_url: str):
-    # Unauthenticated client to verify public endpoints (e.g., health)
+def non_authenticated_client(base_url: str):
     return Client(base_url=base_url)
 
 
 @pytest.fixture
 def client(base_url: str):
-    # Prefer an already-provided token if present
     token = os.environ.get("API_TOKEN")
     if not token:
-        # Otherwise, obtain a token from the API using test credentials
         username = os.environ.get("TEST_USERNAME")
         password = os.environ.get("TEST_PASSWORD")
         if not username or not password:
@@ -50,8 +47,8 @@ def client(base_url: str):
     return AuthenticatedClient(base_url=base_url, token=token, prefix="Bearer")
 
 
-def test_health_check(anon_client):
-    response = health_retrieve.sync_detailed(client=anon_client)
+def test_health_check(non_authenticated_client):
+    response = health_retrieve.sync_detailed(client=non_authenticated_client)
     assert response.status_code == 200
     assert response.status_code == HTTPStatus.OK
 
