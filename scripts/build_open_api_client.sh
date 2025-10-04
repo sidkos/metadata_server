@@ -26,8 +26,16 @@ version=$(grep "__version__" setup.py | awk -F '"' '{print $2}')
 
 cd $CLIENT_DIR
 
-sed -e 's/^attrs .*$/attrs = ">=21.3.0,<24.0.0"/' pyproject.toml > pyproject.toml.tmp
-mv pyproject.toml.tmp pyproject.toml
+# Pin attrs to a compatible range for the generated client
+sed -e 's/^attrs .*$/attrs = ">=21.3.0,<24.0.0"/' pyproject.toml > pyproject.toml.tmp && mv pyproject.toml.tmp pyproject.toml
+
+# Scope the package name for GitHub Packages PyPI as <owner>/<package>
+if [ -n "${REPOSITORY_OWNER:-}" ]; then
+  echo "Scoping package name to ${REPOSITORY_OWNER}/metadata-client for GitHub Packages"
+  sed -E 's/^name\s*=\s*"[^"]+"/name = "'"${REPOSITORY_OWNER}"'\/metadata-client"/' pyproject.toml > pyproject.toml.tmp && mv pyproject.toml.tmp pyproject.toml
+else
+  echo "REPOSITORY_OWNER is not set; leaving package name unchanged (this may break GitHub Packages upload)"
+fi
 
 poetry version $version
 

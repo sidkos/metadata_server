@@ -35,6 +35,10 @@ jobs:
       - name: Setup Python Project
         uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
+      - name: Save repository owner (lowercase) to env for build script
+        run: |
+          echo "REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build OpenAPI client (using repo script)
         run: |
           chmod +x ./scripts/build_open_api_client.sh
