@@ -131,16 +131,16 @@ jobs:
           docker run -d --name metadata-server \
             --add-host=host.docker.internal:host-gateway \
             -p 8000:8000 \
-            -e DJANGO_SECRET_KEY="${{ env.DJANGO_SECRET_KEY }}" \
-            -e DJANGO_DEBUG="${{ env.DJANGO_DEBUG }}" \
-            -e DJANGO_ALLOWED_HOSTS="${{ env.DJANGO_ALLOWED_HOSTS }}" \
-            -e POSTGRES_DB="${{ env.POSTGRES_DB }}" \
-            -e POSTGRES_USER="${{ env.POSTGRES_USER }}" \
-            -e POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}" \
+            -e DJANGO_SECRET_KEY \
+            -e DJANGO_DEBUG \
+            -e DJANGO_ALLOWED_HOSTS \
+            -e POSTGRES_DB \
+            -e POSTGRES_USER \
+            -e POSTGRES_PASSWORD \
             -e POSTGRES_HOST=host.docker.internal \
-            -e POSTGRES_PORT="$DB_PORT" \
-            -e TEST_USERNAME="${{ env.TEST_USERNAME }}" \
-            -e TEST_PASSWORD="${{ env.TEST_PASSWORD }}" \
+            -e POSTGRES_PORT=$DB_PORT \
+            -e TEST_USERNAME \
+            -e TEST_PASSWORD \
             -v "${{ github.workspace }}/scripts:/app/scripts:ro" \
             "$IMAGE_REF" \
             bash /app/scripts/start_server_in_container.sh
