@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Setup Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@add-client-buid
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
 
       - name: Build OpenAPI client (using repo script)
         run: |
@@ -79,13 +79,16 @@ jobs:
           echo "Using registry scope: $SCOPE"
           echo "Resolved upload URL: $REPO_URL"
 
-      - name: Install Twine
-        run: python -m pip install --upgrade twine
+      - name: Install Twine and jq
+        run: |
+          python -m pip install --upgrade twine
+          sudo apt-get update -y
+          sudo apt-get install -y jq
 
       - name: Delete existing package version in GitHub Packages (if any)
         env:
           OWNER: ${{ steps.meta.outputs.owner_lc }}
-          TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
+          TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: |
           set -euo pipefail
           PACKAGE="metadata-client"
@@ -94,16 +97,13 @@ jobs:
           HDRS=("-H" "Authorization: Bearer $TOKEN" "-H" "Accept: application/vnd.github+json" "-H" "X-GitHub-Api-Version: $API_VER")
 
           get_versions() {
-            # Try org endpoint first, then user endpoint
-            curl -fsS "https://api.github.com/orgs/$OWNER/packages/python/$PACKAGE/versions?per_page=100" "${HDRS[@]}" || \
+            # Query the user-scoped packages API (OWNER is a user account)
             curl -fsS "https://api.github.com/users/$OWNER/packages/python/$PACKAGE/versions?per_page=100" "${HDRS[@]}"
           }
 
           VID=$(get_versions | jq -r --arg V "$VERSION" '.[] | select(.name==$V) | .id' | head -n1 || true)
           if [[ -n "${VID:-}" ]]; then
             echo "Found existing package version id: $VID for $PACKAGE@$VERSION. Deleting..."
-            # Try org delete, then user delete
-            curl -fsS -X DELETE "https://api.github.com/orgs/$OWNER/packages/python/$PACKAGE/versions/$VID" "${HDRS[@]}" || \
             curl -fsS -X DELETE "https://api.github.com/users/$OWNER/packages/python/$PACKAGE/versions/$VID" "${HDRS[@]}"
             echo "Deleted existing version $VERSION."
           else
@@ -112,11 +112,12 @@ jobs:
 
       - name: Publish to GitHub Packages (always)
         env:
-          TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || steps.meta.outputs.owner_lc }}
-          TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
+          TWINE_USERNAME: ${{ steps.meta.outputs.owner_lc }}
+          TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN }}
           REPO_URL: ${{ steps.meta.outputs.repo_url }}
         run: |
           echo "Uploading to: $REPO_URL"
           python -m twine upload \
+            --verbose \
             --repository-url "$REPO_URL" \
             metadata-client/dist/*
