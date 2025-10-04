@@ -90,7 +90,7 @@ jobs:
 
       - name: Publish to GitHub Packages (always)
         env:
-          TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || github.actor }}
+          TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || steps.meta.outputs.owner_lc }}
           TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
           REPO_URL: https://pypi.pkg.github.com/${{ steps.meta.outputs.owner_lc }}/
         run: |
