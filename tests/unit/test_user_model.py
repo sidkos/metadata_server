@@ -38,9 +38,7 @@ def client(base_url: str):
         username = os.environ.get("TEST_USERNAME")
         password = os.environ.get("TEST_PASSWORD")
         if not username or not password:
-            raise RuntimeError(
-                "TEST_USERNAME/TEST_PASSWORD or API_TOKEN must be set for authenticated tests"
-            )
+            raise RuntimeError("TEST_USERNAME/TEST_PASSWORD or API_TOKEN must be set for authenticated tests")
         resp = requests.post(
             f"{base_url}/api/token/",
             json={"username": username, "password": password},
