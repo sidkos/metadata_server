@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from typing import Any, Dict
 
 from dotenv import load_dotenv
 
@@ -143,4 +144,36 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    # Enforce JWT-only auth globally
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
+
+# drf-spectacular: advertise Bearer JWT as the only global security scheme
+SPECTACULAR_SETTINGS: Dict[str, Any] = {
+    "SECURITY": [{"bearerAuth": []}],
+}
+
+# Register OpenAPI auth extension so spectacular emits bearerAuth scheme
+try:
+    from drf_spectacular.extensions import OpenApiAuthenticationExtension
+
+    class SimpleJWTScheme(OpenApiAuthenticationExtension):
+        target_class = "rest_framework_simplejwt.authentication.JWTAuthentication"
+        name = "bearerAuth"
+        match_subclasses = True
+
+        def get_security_definition(self, auto_schema):
+            return {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+
+except Exception:
+    # If spectacular is not available at import time in some envs, skip extension registration
+    pass

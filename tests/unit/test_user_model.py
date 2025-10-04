@@ -2,7 +2,8 @@ import os
 from http import HTTPStatus
 
 import pytest
-from metadata_client import Client
+import requests
+from metadata_client import AuthenticatedClient, Client
 from metadata_client.api.health import health_retrieve
 from metadata_client.api.users import (
     users_create,
@@ -15,16 +16,42 @@ from src.tools import generate_israeli_id, generate_random_phone_number
 
 
 @pytest.fixture
-def client():
-    base_url = os.environ.get(
+def base_url() -> str:
+    return os.environ.get(
         "API_BASE_URL",
         f"http://{os.environ.get('METADATA_HOST', 'localhost')}:{os.environ.get('METADATA_PORT', '8000')}",
     )
+
+
+@pytest.fixture
+def anon_client(base_url: str):
+    # Unauthenticated client to verify public endpoints (e.g., health)
     return Client(base_url=base_url)
 
 
-def test_health_check(client):
-    response = health_retrieve.sync_detailed(client=client)
+@pytest.fixture
+def client(base_url: str):
+    # Prefer an already-provided token if present
+    token = os.environ.get("API_TOKEN")
+    if not token:
+        # Otherwise, obtain a token from the API using test credentials
+        username = os.environ.get("TEST_USERNAME")
+        password = os.environ.get("TEST_PASSWORD")
+        if not username or not password:
+            raise RuntimeError("TEST_USERNAME/TEST_PASSWORD or API_TOKEN must be set for authenticated tests")
+        resp = requests.post(
+            f"{base_url}/api/token/",
+            json={"username": username, "password": password},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        token = resp.json()["access"]
+
+    return AuthenticatedClient(base_url=base_url, token=token, prefix="Bearer")
+
+
+def test_health_check(anon_client):
+    response = health_retrieve.sync_detailed(client=anon_client)
     assert response.status_code == 200
     assert response.status_code == HTTPStatus.OK
 

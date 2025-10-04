@@ -13,3 +13,4 @@ rpds-py==0.27.1
 sqlparse==0.5.3
 uritemplate==4.2.0
 dotenv==0.9.9
+djangorestframework-simplejwt==5.5.1
