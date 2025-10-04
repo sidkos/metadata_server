@@ -12,7 +12,7 @@ jobs:
   static_code_analysis:
     uses: sidkos/metadata_server/.github/workflows/static_code_analysis.yml@main
     with:
-      build_and_install_script: "./scripts/build_and_install_open_api_client.sh"
+      build_and_install_script: "./scripts/build_and_install_dp_client.sh"
     secrets: inherit
 
   openapi-validation:

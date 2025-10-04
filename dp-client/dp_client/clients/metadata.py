@@ -14,7 +14,7 @@ class MetaDataServerAPIClientFactory:
         try:
             from metadata_client import AuthenticatedClient as _AuthenticatedClient  # type: ignore
             from metadata_client import Client as _Client
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:
             raise RuntimeError(
                 "metadata-client is required but not installed or failed to import. "
                 f"Original error: {exc}. Install it or run: pip install -r dp-client/requirements.txt"

@@ -10,7 +10,7 @@ from src.tools import generate_israeli_id, generate_random_phone_number
 # This lets us catch specific DB connectivity/driver errors without a blanket Exception.
 # Always keep a consistent, typed value to satisfy mypy.
 PSYCOPG2_ERRORS: tuple[type[BaseException], ...] = tuple()
-try:  # pragma: no cover - optional dependency for tests
+try:
     import psycopg2  # type: ignore
 
     PSYCOPG2_ERRORS = (

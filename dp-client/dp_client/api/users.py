@@ -12,7 +12,7 @@ class UsersAPI:
             from metadata_client.api.users import users_list as _users_list
             from metadata_client.api.users import users_retrieve as _users_retrieve
             from metadata_client.models import User as _User
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:
             raise RuntimeError(
                 "metadata-client is required but not installed or failed to import. "
                 f"Original error: {exc}. Install it or run: pip install -r dp-client/requirements.txt"

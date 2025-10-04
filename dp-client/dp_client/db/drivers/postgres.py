@@ -4,7 +4,7 @@ from typing import Any, Optional, Tuple
 
 try:
     import psycopg2
-except Exception as exc:  # pragma: no cover
+except Exception as exc:
     raise RuntimeError(
         "psycopg2-binary is required for Postgres driver. Install it via dp-client dependencies."
     ) from exc

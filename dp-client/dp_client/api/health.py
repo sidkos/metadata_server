@@ -8,10 +8,10 @@ class HealthAPI:
 
     def __init__(self, client: Any) -> None:
         try:
-            from metadata_client.api.health import health_retrieve as _health_retrieve  # noqa: WPS433
-        except Exception as exc:  # pragma: no cover
+            from metadata_client.api.health import health_retrieve as _health_retrieve
+        except Exception as exc:
             raise RuntimeError(
-                "metadata-client is required but not installed or failed to import. "
+                "Metadata-client is required but not installed or failed to import. "
                 f"Original error: {exc}. Install it or run: pip install -r dp-client/requirements.txt"
             ) from exc
         self._client = client

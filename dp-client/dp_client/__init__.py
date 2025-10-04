@@ -2,7 +2,7 @@ from importlib import metadata as _metadata
 
 try:
     __version__ = _metadata.version("dp-client")
-except _metadata.PackageNotFoundError:  # pragma: no cover
+except _metadata.PackageNotFoundError:
     __version__ = "0.0.0"
 
 from .api import HealthAPI, UsersAPI  # noqa: F401
