@@ -114,7 +114,7 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PACKAGES_USERNAME || steps.meta.outputs.owner_lc }}
           TWINE_PASSWORD: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
-          REPO_URL: ${{ steps.meta.outputs.repo_url }}
+          REPO_URL: ${{ steps.meta.outputs.repo_url }}/$${{ GITHUB_REPOSITORY }}
         run: |
           echo "Uploading to: $REPO_URL"
           python -m twine upload \
