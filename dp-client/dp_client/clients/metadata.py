@@ -12,7 +12,7 @@ class MetaDataServerAPIClientFactory:
     def __init__(self) -> None:
         # Import lazily to keep dp-client importable even if metadata-client is missing
         try:
-            from metadata_client import AuthenticatedClient as _AuthenticatedClient  # type: ignore
+            from metadata_client import AuthenticatedClient as _AuthenticatedClient
             from metadata_client import Client as _Client
         except Exception as exc:
             raise RuntimeError(

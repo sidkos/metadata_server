@@ -66,20 +66,29 @@ class PGDBClient:
             "yes",
             "on",
         }
-        resolved_host = final_host  # type: ignore[assignment]
+        # At this point, required parameters are present; narrow Optional types for type-checker
+        from typing import cast
+
+        final_host_str = cast(str, final_host)
+        final_port_int = cast(int, final_port)
+        final_db_str = cast(str, final_db)
+        final_user_str = cast(str, final_user)
+        final_password_str = cast(str, final_password)
+
+        resolved_host: str = final_host_str
         try:
             # Try to resolve the host name; if it fails, consider fallback.
-            socket.gethostbyname(str(final_host))
+            socket.gethostbyname(final_host_str)
         except Exception:
             if allow_fallback:
                 resolved_host = "localhost"
 
         self._driver = PostgresDriver(
-            host=resolved_host,  # type: ignore[arg-type]
-            port=int(final_port),  # type: ignore[arg-type]
-            dbname=final_db,  # type: ignore[arg-type]
-            user=final_user,  # type: ignore[arg-type]
-            password=final_password,  # type: ignore[arg-type]
+            host=resolved_host,
+            port=final_port_int,
+            dbname=final_db_str,
+            user=final_user_str,
+            password=final_password_str,
         )
         self._table = table
 
