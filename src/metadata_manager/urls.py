@@ -1,3 +1,12 @@
+"""Application URL routes.
+
+Exposes:
+- /api/users/ (list, create)
+- /api/users/<id>/ (retrieve)
+- /api/health/ (public health check)
+Additionally registers routes with a DRF router for the UserViewSet.
+"""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

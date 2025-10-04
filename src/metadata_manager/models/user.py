@@ -1,3 +1,8 @@
+"""User data model.
+
+Defines the User model and validation utilities for Israeli ID and phone.
+"""
+
 from typing import Any
 
 import phonenumbers
@@ -5,6 +10,48 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from .base import BaseModel
+
+# Module-level validators (used by field validators and tests)
+
+
+def validate_israeli_id(value: str) -> None:
+    """Validate that given value is a valid Israeli ID.
+
+    Args:
+        value: The ID value to validate.
+
+    Raises:
+        ValidationError: If the ID is not valid (wrong length, non-digit, bad checksum).
+    """
+    id_num: str = str(value).zfill(9)
+    if not id_num.isdigit() or not (5 <= len(str(value)) <= 9):
+        raise ValidationError("ID must be a string of 5-9 digits")
+    total: int = 0
+    for idx, char in enumerate(id_num):
+        digit: int = int(char)
+        multiplied: int = digit * (1 if idx % 2 == 0 else 2)
+        if multiplied > 9:
+            multiplied -= 9
+        total += multiplied
+    if total % 10 != 0:
+        raise ValidationError("Invalid Israeli ID checksum")
+
+
+def validate_phone(value: str) -> None:
+    """Validate that given value is a valid phone number in E.164 format.
+
+    Args:
+        value: Phone number in string format.
+
+    Raises:
+        ValidationError: If the phone number is not valid or not in E.164 format.
+    """
+    try:
+        phone: Any = phonenumbers.parse(str(value))
+        if not phonenumbers.is_possible_number(phone) or not phonenumbers.is_valid_number(phone):
+            raise ValidationError("Phone number is not valid.")
+    except Exception as exc:
+        raise ValidationError("Phone number must be in valid international format (e.g., +972...)") from exc
 
 
 class User(BaseModel):
@@ -24,46 +71,6 @@ class User(BaseModel):
     name: models.CharField
     phone: models.CharField
     address: models.CharField
-
-    @staticmethod
-    def validate_israeli_id(value: str) -> None:
-        """Validate that given value is a valid Israeli ID.
-
-        Args:
-            value (str): The ID value to validate.
-
-        Raises:
-            ValidationError: If the ID is not valid (wrong length, non-digit, bad checksum).
-        """
-        id_num: str = value.zfill(9)
-        if not id_num.isdigit() or not (5 <= len(value) <= 9):
-            raise ValidationError("ID must be a string of 5-9 digits")
-        total: int = 0
-        for idx, char in enumerate(id_num):
-            digit: int = int(char)
-            multiplied: int = digit * (1 if idx % 2 == 0 else 2)
-            if multiplied > 9:
-                multiplied -= 9
-            total += multiplied
-        if total % 10 != 0:
-            raise ValidationError("Invalid Israeli ID checksum")
-
-    @staticmethod
-    def validate_phone(value: str) -> None:
-        """Validate that given value is a valid phone number in E.164 format.
-
-        Args:
-            value (str): Phone number in string format.
-
-        Raises:
-            ValidationError: If the phone number is not valid or not in E.164 format.
-        """
-        try:
-            phone: Any = phonenumbers.parse(value)
-            if not phonenumbers.is_possible_number(phone) or not phonenumbers.is_valid_number(phone):
-                raise ValidationError("Phone number is not valid.")
-        except Exception as exc:
-            raise ValidationError("Phone number must be in valid international format (e.g., +972...)") from exc
 
     id = models.CharField(
         primary_key=True,
@@ -93,3 +100,20 @@ class User(BaseModel):
             str: User name and ID in format 'Name (ID)'.
         """
         return f"{self.name} ({self.id})"
+
+    # Backward-compatible validator attributes for historical migrations
+    @staticmethod
+    def validate_israeli_id(value: str) -> None:
+        """Backward-compat shim to satisfy old migrations.
+
+        Delegates to module-level validate_israeli_id.
+        """
+        return validate_israeli_id(value)
+
+    @staticmethod
+    def validate_phone(value: str) -> None:
+        """Backward-compat shim to satisfy old migrations.
+
+        Delegates to module-level validate_phone.
+        """
+        return validate_phone(value)

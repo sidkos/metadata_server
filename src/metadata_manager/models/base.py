@@ -1,6 +1,6 @@
-from django.db import models
+"""Base model mixins and shared abstractions for ORM models."""
 
-# Place for common base models/mixins
+from django.db import models
 
 
 class BaseModel(models.Model):

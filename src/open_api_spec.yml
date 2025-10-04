@@ -6,11 +6,18 @@ paths:
   /api/health/:
     get:
       operationId: health_retrieve
-      description: Health check GET method.
+      description: |-
+        Return service status.
+
+        Args:
+            request (Request): The incoming request instance.
+            *args: Unused positional arguments.
+            **kwargs: Unused keyword arguments.
+
+        Returns:
+            Response: JSON body {"status": "ok"} with HTTP 200.
       tags:
       - health
-      security:
-      - bearerAuth: []
       responses:
         '200':
           content:
@@ -213,7 +220,10 @@ paths:
   /api/users/:
     get:
       operationId: users_list
-      description: ViewSet for creating, retrieving, and listing users.
+      description: |-
+        User operations.
+
+        Provides create, retrieve, and list operations for User resources.
       tags:
       - users
       security:
@@ -230,7 +240,10 @@ paths:
           description: ''
     post:
       operationId: users_create
-      description: ViewSet for creating, retrieving, and listing users.
+      description: |-
+        User operations.
+
+        Provides create, retrieve, and list operations for User resources.
       tags:
       - users
       requestBody:
@@ -252,7 +265,10 @@ paths:
   /api/users/{id}/:
     get:
       operationId: users_retrieve
-      description: ViewSet for creating, retrieving, and listing users.
+      description: |-
+        User operations.
+
+        Provides create, retrieve, and list operations for User resources.
       parameters:
       - in: path
         name: id
@@ -274,7 +290,14 @@ paths:
   /api/users/ids/:
     get:
       operationId: users_ids_retrieve
-      description: List all user IDs.
+      description: |-
+        List all user IDs.
+
+        Args:
+            request (Request): The incoming request instance.
+
+        Returns:
+            Response: A list of user IDs (strings).
       tags:
       - users
       security:
@@ -291,6 +314,11 @@ components:
   schemas:
     HealthCheck:
       type: object
+      description: |-
+        Serializer for the health check response.
+
+        Fields:
+            status (CharField): Service status string (e.g., "ok").
       properties:
         status:
           type: string
