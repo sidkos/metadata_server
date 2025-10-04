@@ -1,9 +1,17 @@
+"""Django management entrypoint.
+
+Provides the main() function to execute administrative tasks.
+"""
 import os
 import sys
 
 
 def main() -> None:
-    """Run administrative tasks."""
+    """Run administrative tasks.
+
+    Reads Django settings module from environment and delegates to Django's
+    command-line utility.
+    """
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
     try:
         from django.core.management import execute_from_command_line

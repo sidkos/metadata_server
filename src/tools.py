@@ -1,9 +1,21 @@
+"""Utility helpers for test data and validation.
+
+Provides functions to:
+- Generate valid Israeli IDs
+- Validate Israeli IDs
+- Generate random valid E.164 phone numbers (IL)
+"""
 import random
 
 import phonenumbers
 
 
 def generate_random_phone_number() -> str:
+    """Generate a random valid Israeli phone number in E.164 format.
+
+    Returns:
+        str: A valid phone number string (e.g., "+97286XXXXXX").
+    """
     while True:
         phone_number = f"+97286{random.randint(100000, 999999)}"
         try:
@@ -15,38 +27,44 @@ def generate_random_phone_number() -> str:
 
 
 def is_valid_israeli_id(id_str: str, from_right: bool = True) -> bool:
-    """
-    Validate a 9-digit Israeli ID (Teudat Zehut) using the checksum algorithm.
-    - id_str: string of 9 digits (leading zeros allowed)
-    - from_right: if True, weights 1/2 alternate starting from the RIGHTmost digit;
-                  if False, start alternating from the LEFTmost digit.
-    Returns True if valid.
+    """Validate a 9-digit Israeli ID (Teudat Zehut).
+
+    Applies the standard checksum algorithm.
+
+    Args:
+        id_str (str): String of 9 digits (leading zeros allowed).
+        from_right (bool, optional): If True, alternate weights starting from the
+            rightmost digit; if False, from the leftmost. Defaults to True.
+
+    Returns:
+        bool: True if the ID is valid, False otherwise.
     """
     if not (id_str.isdigit() and len(id_str) == 9):
         return False
 
     total = 0
-    # Process digits and weights
-    # We'll index digits left-to-right, but compute weight depending on from_right.
     for idx, ch in enumerate(id_str):
         digit = int(ch)
-        # position_from_right = (len-1 - idx)
-        if from_right:
-            pos = len(id_str) - 1 - idx
-        else:
-            pos = idx
+        pos = len(id_str) - 1 - idx if from_right else idx
         weight = 1 if (pos % 2 == 0) else 2
         product = digit * weight
-        # sum of product digits: same as product if < 10 else product - 9
         total += product if product < 10 else product - 9
 
     return total % 10 == 0
 
 
 def generate_israeli_id(from_right: bool = True) -> str:
-    """
-    Generate one random, checksum-valid 9-digit Israeli ID.
-    from_right parameter must match your validator's convention.
+    """Generate a random valid 9-digit Israeli ID.
+
+    Args:
+        from_right (bool, optional): Whether the checksum alternation starts from
+            the rightmost digit (True) or the leftmost digit (False). Defaults to True.
+
+    Returns:
+        str: A 9-digit string that passes the checksum validation.
+
+    Raises:
+        RuntimeError: If a valid check digit cannot be computed (unexpected).
     """
     # Generate first 8 digits
     first8 = [random.randint(0, 9) for _ in range(8)]

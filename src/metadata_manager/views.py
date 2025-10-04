@@ -1,3 +1,7 @@
+"""API views for the metadata manager app.
+
+Includes user CRUD endpoints and a public health check endpoint.
+"""
 from __future__ import annotations
 
 from rest_framework import generics, mixins, serializers, status, viewsets
@@ -15,8 +19,9 @@ class UserViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    ViewSet for creating, retrieving, and listing users.
+    """User operations.
+
+    Provides create, retrieve, and list operations for User resources.
     """
 
     queryset = User.objects.all()
@@ -24,20 +29,32 @@ class UserViewSet(
 
     @action(detail=False, methods=["get"])
     def ids(self, request: Request) -> Response:
-        """
-        List all user IDs.
+        """List all user IDs.
+
+        Args:
+            request (Request): The incoming request instance.
+
+        Returns:
+            Response: A list of user IDs (strings).
         """
         ids = list(self.get_queryset().values_list("id", flat=True))
         return Response(ids)
 
 
 class HealthCheckSerializer(serializers.Serializer):
+    """Serializer for the health check response.
+
+    Fields:
+        status (CharField): Service status string (e.g., "ok").
+    """
+
     status = serializers.CharField()
 
 
 class HealthCheck(generics.GenericAPIView):
-    """
-    Simple health check endpoint.
+    """Public health check endpoint.
+
+    This endpoint does not require authentication and returns a simple status payload.
     """
 
     serializer_class = HealthCheckSerializer
@@ -45,7 +62,14 @@ class HealthCheck(generics.GenericAPIView):
     permission_classes: list[type] = []
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        """
-        Health check GET method.
+        """Return service status.
+
+        Args:
+            request (Request): The incoming request instance.
+            *args: Unused positional arguments.
+            **kwargs: Unused keyword arguments.
+
+        Returns:
+            Response: JSON body {"status": "ok"} with HTTP 200.
         """
         return Response({"status": "ok"}, status=status.HTTP_200_OK)

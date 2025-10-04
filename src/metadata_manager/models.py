@@ -1,3 +1,7 @@
+"""Data models and validators for the metadata manager app.
+
+Includes the User model and helper validators for Israeli ID and phone numbers.
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -86,4 +90,9 @@ class User(models.Model):
     )
 
     def __str__(self) -> str:
+        """Return a human-readable representation.
+
+        Returns:
+            str: The user's name with ID in the format "Name (ID)".
+        """
         return f"{self.name} ({self.id})"

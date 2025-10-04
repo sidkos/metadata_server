@@ -1,10 +1,6 @@
-"""
-WSGI config for server project.
+"""WSGI application entrypoint.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.0/howto/deployment/wsgi/
+Exposes a module-level variable `application` for WSGI servers.
 """
 
 import os
