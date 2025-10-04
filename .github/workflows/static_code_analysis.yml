@@ -28,7 +28,7 @@ jobs:
         shell: bash
     steps:
       - name: SetUp Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@add-client-buid
 
       - name: Build and install client packages
         if: ${{ inputs.build_and_install_script }}
@@ -36,24 +36,24 @@ jobs:
 
       - name: Run Black
         if: always()
-        uses: sidkos/metadata_server/.github/actions/black@main
+        uses: sidkos/metadata_server/.github/actions/black@add-client-buid
 
       - name: Run Isort
         if: always()
-        uses: sidkos/metadata_server/.github/actions/isort@main
+        uses: sidkos/metadata_server/.github/actions/isort@add-client-buid
 
       - name: Run Pycodestyle
         if: always()
-        uses: sidkos/metadata_server/.github/actions/pycodestyle@main
+        uses: sidkos/metadata_server/.github/actions/pycodestyle@add-client-buid
 
       - name: Run Flake8
         if: always()
-        uses: sidkos/metadata_server/.github/actions/flake8@main
+        uses: sidkos/metadata_server/.github/actions/flake8@add-client-buid
 
       - name: Run MyPy
         if: always()
-        uses: sidkos/metadata_server/.github/actions/mypy@main
+        uses: sidkos/metadata_server/.github/actions/mypy@add-client-buid
 
       - name: Run Yaml Lint
         if: always()
-        uses: sidkos/metadata_server/.github/actions/yamllint@main
+        uses: sidkos/metadata_server/.github/actions/yamllint@add-client-buid

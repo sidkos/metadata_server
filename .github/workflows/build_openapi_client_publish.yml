@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Setup Python Project
-        uses: sidkos/metadata_server/.github/actions/setup_python_project@main
+        uses: sidkos/metadata_server/.github/actions/setup_python_project@add-client-buid
 
       - name: Build OpenAPI client (using repo script)
         run: |
