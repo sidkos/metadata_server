@@ -1,82 +1,28 @@
 from http import HTTPStatus
-from typing import Callable, Dict, Generator, List
+from typing import Callable, Dict, List
 
 import pytest
 from dp_client import DPClient
 
 from src.tools import generate_israeli_id, generate_random_phone_number
 
-# Define a tuple of psycopg2-related exceptions if psycopg2 is available.
-# This lets us catch specific DB connectivity/driver errors without a blanket Exception.
-PSYCOPG2_ERRORS: tuple[type[BaseException], ...] = tuple()
-try:
-    import psycopg2
-
-    PSYCOPG2_ERRORS = (
-        psycopg2.OperationalError,
-        psycopg2.InterfaceError,
-        psycopg2.Error,
-    )
-except Exception:  # psycopg2 not installed or failed to import in this context
-    # Leave PSYCOPG2_ERRORS as an empty tuple of exception types
-    pass
-
-
-@pytest.fixture
-def non_authenticated_client(base_url: str) -> DPClient:
-    return DPClient(base_url=base_url)
-
-
-@pytest.fixture
-def client(base_url: str, auth_token: str) -> DPClient:
-    return DPClient(base_url=base_url, token=auth_token, prefix="Bearer")
-
-
-@pytest.fixture
-def require_db(client: DPClient) -> None:
-    """Skip tests that require direct DB access if the DB is not reachable.
-
-    Tries a simple query via PGDBClient; on failure, skips the test.
-    """
-    try:
-        # Trigger a DB connection with a harmless lookup
-        client.PGDBClient.get_user_by_id("__nonexistent__")
-    except Exception as exc:
-        pytest.skip(
-            "Database not available for component DB checks: "
-            f"{exc}\n"
-            "Hints: set POSTGRES_HOST to a reachable host (e.g., localhost), "
-            "or export POSTGRES_ALLOW_LOCAL_FALLBACK=true to fall back to localhost when 'db' is not resolvable, "
-            "or run `docker-compose up -d` so the service name 'db' is resolvable."
-        )
-
-
-@pytest.fixture(scope="function")
-def created_user_ids(client: DPClient) -> Generator[List[str], None, None]:
-    ids: List[str] = []
-    # Pre-test cleanup (defensive): ensure none of these ids already exist (normally random, but be safe)
-    if ids:
-        try:
-            client.PGDBClient.delete_users_by_ids(ids)
-        except PSYCOPG2_ERRORS + (RuntimeError,):
-            # DB not available/misconfigured; ignore cleanup in pre
-            pass
-    yield ids
-    # Post-test cleanup: remove created users directly from DB since there is no DELETE API
-    if ids:
-        try:
-            client.PGDBClient.delete_users_by_ids(ids)
-        except PSYCOPG2_ERRORS + (RuntimeError,):
-            # DB not available/misconfigured; ignore cleanup in post
-            pass
-
 
 def test_health_check_component(non_authenticated_client: DPClient) -> None:
+    """Test health endpoint responds with 200 OK.
+    1. Build non-authenticated client
+    2. Call GET /api/health/
+    3. Assert HTTP 200
+    """
     response = non_authenticated_client.health_check()
     assert response.status_code == HTTPStatus.OK
 
 
 def test_create_user_valid_component(client: DPClient, created_user_ids: List[str], require_db: None) -> None:
+    """Test creating a valid user and DB persistence + cleanup.
+    1. Create a user via API
+    2. Verify response body and DB state
+    3. Delete user via API and verify DB removal
+    """
     payload: Dict[str, object] = {
         "id": generate_israeli_id(),
         "name": "Test User",
@@ -103,6 +49,11 @@ def test_create_user_valid_component(client: DPClient, created_user_ids: List[st
 
 
 def test_create_user_invalid_id_component(client: DPClient, require_db: None) -> None:
+    """Test creating a user with invalid ID fails and no DB insert occurs.
+    1. Build invalid payload with bad ID
+    2. Call POST /api/users/
+    3. Assert 400 and no DB record exists
+    """
     payload: Dict[str, object] = {
         "id": "123789456",
         "name": "Test User",
@@ -117,6 +68,11 @@ def test_create_user_invalid_id_component(client: DPClient, require_db: None) ->
 
 
 def test_create_user_invalid_phone_component(client: DPClient, require_db: None) -> None:
+    """Test creating a user with invalid phone fails and no DB insert occurs.
+    1. Build invalid payload with bad phone
+    2. Call POST /api/users/
+    3. Assert 400 and no DB record exists
+    """
     payload: Dict[str, object] = {
         "id": generate_israeli_id(),
         "name": "Test User",
@@ -131,6 +87,11 @@ def test_create_user_invalid_phone_component(client: DPClient, require_db: None)
 
 
 def test_retrieve_user_component(client: DPClient, created_user_ids: List[str], require_db: None) -> None:
+    """Test retrieving a user reflects created data and cleanup works.
+    1. Create a user via API
+    2. Retrieve user via API and verify fields
+    3. Delete user and verify DB cleanup
+    """
     payload: Dict[str, object] = {
         "id": generate_israeli_id(),
         "name": "Test User",
@@ -156,6 +117,11 @@ def test_retrieve_user_component(client: DPClient, created_user_ids: List[str], 
 
 
 def test_list_users_component(client: DPClient, created_user_ids: List[str], require_db: None) -> None:
+    """Test listing users contains created users and cleanup works.
+    1. Create two users via API
+    2. List users and verify IDs included
+    3. Delete users and verify DB cleanup
+    """
     users_data: List[Dict[str, object]] = [
         {
             "id": generate_israeli_id(),
@@ -217,6 +183,11 @@ def test_component_users_partial_update_parametrized(
     payload_builder: Callable[[], Dict[str, object]],
     expect_ok: bool,
 ) -> None:
+    """Test PATCH variants (parametrized) and DB validation + cleanup.
+    1. Create user via API
+    2. PATCH with parametrized body and assert success or failure
+    3. Verify DB state accordingly and delete user
+    """
     payload = _new_user_payload()
     created_user_ids.append(str(payload["id"]))
 
@@ -281,6 +252,11 @@ def test_component_users_update_put_parametrized(
     payload_builder: Callable[[], Dict[str, object]],
     expect_ok: bool,
 ) -> None:
+    """Test PUT variants (parametrized) with strict id and DB validation.
+    1. Create user via API
+    2. PUT with parametrized body and assert success or failure
+    3. Verify DB state accordingly and delete user
+    """
     payload = _new_user_payload()
     created_user_ids.append(str(payload["id"]))
 
