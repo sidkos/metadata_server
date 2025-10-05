@@ -46,14 +46,12 @@ class PostgresDriver:
         try:
             return int(row[0])
         except (TypeError, ValueError):
-            # Fallback: not an int-compatible value
             return None
 
     def execute(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> int:
         with self._conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params or ())
-                # psycopg2 rowcount: number of rows affected by last command
                 affected = cur.rowcount
                 conn.commit()
                 return int(affected)

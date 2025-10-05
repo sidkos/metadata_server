@@ -88,7 +88,6 @@ class DPClient:
         """
         return self.UsersApi.list_users()
 
-    # New endpoints wrappers
     def update_user(self, user_id: str, body: Union[_UserUpdate, dict[str, object]]) -> Response[_User]:
         """Update a user via PUT /api/users/{id}/.
 
@@ -99,7 +98,6 @@ class DPClient:
         Returns:
             The detailed response from the generated client.
         """
-        # Delegate to UsersAPI which normalizes payload and types
         return self.UsersApi.update_user(user_id, body)
 
     def partial_update_user(self, user_id: str, body: dict[str, object]) -> Response[_User]:

@@ -10,6 +10,8 @@ if TYPE_CHECKING:  # import only for type checkers; runtime uses lazy-loaded att
     from metadata_client.models import User as _User
     from metadata_client.models import UserUpdate as _UserUpdate
 
+from typing import cast
+
 
 class UsersAPI:
     """Users endpoints wrapper using generated metadata_client api module.
@@ -76,8 +78,6 @@ class UsersAPI:
                 + ", ".join(missing)
                 + ". Regenerate the client from the updated API spec."
             )
-        # Cast to non-optional after validation
-        from typing import cast
 
         self._ep: Dict[str, ModuleType] = cast(Dict[str, ModuleType], tmp_ep)
 

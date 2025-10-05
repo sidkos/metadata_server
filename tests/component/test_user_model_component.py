@@ -97,7 +97,7 @@ def test_create_user_valid_component(client: DPClient, created_user_ids: List[st
     assert db_user["phone"] == payload["phone"]
     assert db_user["address"] == payload["address"]
 
-    del_resp = client.delete_user(str(payload["id"]))  # 204 expected
+    del_resp = client.delete_user(str(payload["id"]))
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     assert client.PGDBClient.get_user_by_id(str(payload["id"])) is None
 
@@ -150,7 +150,7 @@ def test_retrieve_user_component(client: DPClient, created_user_ids: List[str], 
     assert response.parsed.id == payload["id"]
     assert response.parsed.name == payload["name"]
 
-    del_resp = client.delete_user(str(payload["id"]))  # 204 expected
+    del_resp = client.delete_user(str(payload["id"]))
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     assert client.PGDBClient.get_user_by_id(str(payload["id"])) is None
 
@@ -186,7 +186,7 @@ def test_list_users_component(client: DPClient, created_user_ids: List[str], req
         assert u["id"] in returned_ids_api
 
     for u in users_data:
-        del_resp = client.delete_user(str(u["id"]))  # 204 expected
+        del_resp = client.delete_user(str(u["id"]))
         assert del_resp.status_code == HTTPStatus.NO_CONTENT
         assert client.PGDBClient.get_user_by_id(str(u["id"])) is None
 
@@ -218,7 +218,7 @@ def test_component_users_partial_update_parametrized(
     expect_ok: bool,
 ) -> None:
     payload = _new_user_payload()
-    created_user_ids.append(str(payload["id"]))  # ensure cleanup
+    created_user_ids.append(str(payload["id"]))
 
     create_resp = client.create_user(payload)
     assert create_resp.status_code == HTTPStatus.CREATED
@@ -233,7 +233,6 @@ def test_component_users_partial_update_parametrized(
             if k == "id":
                 continue
             assert getattr(resp.parsed, k) == v
-        # DB verify
         db = client.PGDBClient.get_user_by_id(str(payload["id"]))
         assert db is not None
         for k, v in patch_body.items():
@@ -242,12 +241,10 @@ def test_component_users_partial_update_parametrized(
     else:
         assert resp.status_code == HTTPStatus.BAD_REQUEST
         assert resp.parsed is None
-        # DB should remain unchanged
         db = client.PGDBClient.get_user_by_id(str(payload["id"]))
         assert db is not None
 
-    # Cleanup: delete via API and validate DB removal
-    del_resp = client.delete_user(str(payload["id"]))  # 204 expected
+    del_resp = client.delete_user(str(payload["id"]))
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     assert client.PGDBClient.get_user_by_id(str(payload["id"])) is None
 
@@ -285,7 +282,7 @@ def test_component_users_update_put_parametrized(
     expect_ok: bool,
 ) -> None:
     payload = _new_user_payload()
-    created_user_ids.append(str(payload["id"]))  # ensure cleanup
+    created_user_ids.append(str(payload["id"]))
 
     create_resp = client.create_user(payload)
     assert create_resp.status_code == HTTPStatus.CREATED
@@ -310,6 +307,6 @@ def test_component_users_update_put_parametrized(
         assert resp.status_code == HTTPStatus.BAD_REQUEST
         assert resp.parsed is None
 
-    del_resp = client.delete_user(str(payload["id"]))  # 204 expected
+    del_resp = client.delete_user(str(payload["id"]))
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     assert client.PGDBClient.get_user_by_id(str(payload["id"])) is None
