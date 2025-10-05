@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import requests
@@ -70,7 +70,8 @@ def auth_token(base_url: str) -> str:
         timeout=10,
     )
     resp.raise_for_status()
-    return resp.json()["access"]
+    data = cast(dict[str, Any], resp.json())
+    return cast(str, data["access"])
 
 
 try:
@@ -82,7 +83,7 @@ except Exception:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def non_authenticated_client(base_url: str):
+def non_authenticated_client(base_url: str) -> _Client:
     """Unauthenticated generated API client (metadata_client.Client).
 
     Args:
@@ -91,13 +92,11 @@ def non_authenticated_client(base_url: str):
     Returns:
         metadata_client.Client instance.
     """
-    if Client is None:
-        raise RuntimeError("metadata_client is not installed. Generate or install the client before running tests.")
-    return Client(base_url=base_url)
+    return _Client(base_url=base_url)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def client(base_url: str, auth_token: str):
+def client(base_url: str, auth_token: str) -> _AuthenticatedClient:
     """Authenticated generated API client (metadata_client.AuthenticatedClient).
 
     Args:
@@ -107,9 +106,7 @@ def client(base_url: str, auth_token: str):
     Returns:
         metadata_client.AuthenticatedClient instance.
     """
-    if AuthenticatedClient is None:
-        raise RuntimeError("metadata_client is not installed. Generate or install the client before running tests.")
-    return AuthenticatedClient(base_url=base_url, token=auth_token, prefix="Bearer")
+    return _AuthenticatedClient(base_url=base_url, token=auth_token, prefix="Bearer")
 
 
 @pytest.fixture(scope="function")

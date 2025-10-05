@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, cast
+
+from psycopg2.extensions import connection as PGConnection
 
 try:
     import psycopg2
@@ -27,18 +29,25 @@ class PostgresDriver:
     ) -> None:
         self._conn_params = dict(host=host, port=port, dbname=dbname, user=user, password=password)
 
-    def _conn(self):
+    def _conn(self) -> PGConnection:
         return psycopg2.connect(**self._conn_params)
 
-    def fetch_one(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[tuple]:
+    def fetch_one(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[tuple[Any, ...]]:
         with self._conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params or ())
-                return cur.fetchone()
+                row = cast(Optional[tuple[Any, ...]], cur.fetchone())
+                return row
 
-    def fetch_value(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[Any]:
+    def fetch_value(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[int]:
         row = self.fetch_one(query, params)
-        return row[0] if row is not None and len(row) > 0 else None
+        if row is None or len(row) == 0:
+            return None
+        try:
+            return int(row[0])
+        except (TypeError, ValueError):
+            # Fallback: not an int-compatible value
+            return None
 
     def execute(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> int:
         with self._conn() as conn:

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Optional, Union
+
+from metadata_client import AuthenticatedClient, Client
+from metadata_client.models import User as _User
+from metadata_client.models import UserUpdate as _UserUpdate
+from metadata_client.types import Response
 
 from .api.health import HealthAPI
 from .api.users import UsersAPI
@@ -37,13 +42,15 @@ class DPClient:
             timeout: Default request timeout in seconds for higher-level operations.
         """
         self._client_factory = MetaDataServerAPIClientFactory()
-        self.MetaDataServerAPIClient: Any = self._client_factory.build(base_url=base_url, token=token, prefix=prefix)
+        self.MetaDataServerAPIClient: Union[Client, AuthenticatedClient] = self._client_factory.build(
+            base_url=base_url, token=token, prefix=prefix
+        )
         self.UsersApi = UsersAPI(self.MetaDataServerAPIClient)
         self.HealthAPI = HealthAPI(self.MetaDataServerAPIClient)
         self.PGDBClient = PGDBClient()
         self._timeout = timeout
 
-    def health_check(self):
+    def health_check(self) -> Response[dict[str, str]]:
         """Call the health check endpoint.
 
         Returns:
@@ -51,7 +58,7 @@ class DPClient:
         """
         return self.HealthAPI.health_check()
 
-    def create_user(self, user: Union[Any, dict[str, Any]]):
+    def create_user(self, user: Union[_User, dict[str, object]]) -> Response[_User]:
         """Create a user.
 
         Args:
@@ -62,7 +69,7 @@ class DPClient:
         """
         return self.UsersApi.create_user(user)
 
-    def get_user(self, user_id: str):
+    def get_user(self, user_id: str) -> Response[_User]:
         """Retrieve a user by ID.
 
         Args:
@@ -73,7 +80,7 @@ class DPClient:
         """
         return self.UsersApi.get_user(user_id)
 
-    def list_users(self):
+    def list_users(self) -> Response[list[_User]]:
         """List all users.
 
         Returns:
@@ -82,7 +89,7 @@ class DPClient:
         return self.UsersApi.list_users()
 
     # New endpoints wrappers
-    def update_user(self, user_id: str, body):
+    def update_user(self, user_id: str, body: Union[_UserUpdate, dict[str, object]]) -> Response[_User]:
         """Update a user via PUT /api/users/{id}/.
 
         Args:
@@ -92,9 +99,10 @@ class DPClient:
         Returns:
             The detailed response from the generated client.
         """
+        # Delegate to UsersAPI which normalizes payload and types
         return self.UsersApi.update_user(user_id, body)
 
-    def partial_update_user(self, user_id: str, body: dict):
+    def partial_update_user(self, user_id: str, body: dict[str, object]) -> Response[_User]:
         """Partially update a user via PATCH /api/users/{id}/.
 
         Args:
@@ -106,7 +114,7 @@ class DPClient:
         """
         return self.UsersApi.partial_update_user(user_id, body)
 
-    def delete_user(self, user_id: str):
+    def delete_user(self, user_id: str) -> Response[None]:
         """Delete a user via DELETE /api/users/{id}/.
 
         Args:

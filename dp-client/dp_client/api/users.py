@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Union
+from types import ModuleType
+from typing import TYPE_CHECKING, Dict, Union
+
+from metadata_client import AuthenticatedClient, Client
+from metadata_client.types import Response
+
+if TYPE_CHECKING:  # import only for type checkers; runtime uses lazy-loaded attributes
+    from metadata_client.models import User as _User
+    from metadata_client.models import UserUpdate as _UserUpdate
 
 
 class UsersAPI:
@@ -20,7 +28,7 @@ class UsersAPI:
         "destroy": "users_destroy",
     }
 
-    def __init__(self, client: Any) -> None:
+    def __init__(self, client: Union[Client, AuthenticatedClient]) -> None:
         """Initialize the UsersAPI wrapper.
 
         Args:
@@ -33,7 +41,6 @@ class UsersAPI:
                 missing from metadata_client.api.users.
         """
         try:
-            from metadata_client.api import users as _users_api
             from metadata_client.models import PatchedUserUpdate as _PatchedUserUpdate
             from metadata_client.models import User as _User
             from metadata_client.models import UserUpdate as _UserUpdate
@@ -52,25 +59,29 @@ class UsersAPI:
         # metadata_client.api.users may not expose submodules as attributes.
         import importlib
 
-        self._ep: Dict[str, Any] = {}
+        tmp_ep: Dict[str, ModuleType | None] = {}
         for key, attr_name in self._ENDPOINT_ATTRS.items():
             module_name = f"metadata_client.api.users.{attr_name}"
             try:
                 mod = importlib.import_module(module_name)
             except Exception:
                 mod = None
-            self._ep[key] = mod
+            tmp_ep[key] = mod
 
         # Validate presence of ALL endpoints (include all options)
-        missing = [self._ENDPOINT_ATTRS[k] for k, v in self._ep.items() if v is None]
+        missing = [self._ENDPOINT_ATTRS[k] for k, v in tmp_ep.items() if v is None]
         if missing:
             raise RuntimeError(
                 "metadata_client.api.users is missing required endpoints: "
                 + ", ".join(missing)
                 + ". Regenerate the client from the updated API spec."
             )
+        # Cast to non-optional after validation
+        from typing import cast
 
-    def create_user(self, user: Union[Any, dict]):
+        self._ep: Dict[str, ModuleType] = cast(Dict[str, ModuleType], tmp_ep)
+
+    def create_user(self, user: Union[_User, dict[str, object]]) -> Response[_User]:
         """Create a user via POST /api/users/.
 
         Args:
@@ -82,9 +93,10 @@ class UsersAPI:
             status_code, content, headers, and parsed payload.
         """
         body = self._User.from_dict(user) if isinstance(user, dict) else user
-        return self._ep["create"].sync_detailed(client=self._client, body=body)
+        res: Response[_User] = self._ep["create"].sync_detailed(client=self._client, body=body)
+        return res
 
-    def get_user(self, user_id: str):
+    def get_user(self, user_id: str) -> Response[_User]:
         """Retrieve a user by ID via GET /api/users/{id}/.
 
         Args:
@@ -93,17 +105,19 @@ class UsersAPI:
         Returns:
             The detailed response object from the generated client.
         """
-        return self._ep["retrieve"].sync_detailed(client=self._client, id=user_id)
+        res: Response[_User] = self._ep["retrieve"].sync_detailed(client=self._client, id=user_id)
+        return res
 
-    def list_users(self):
+    def list_users(self) -> Response[list[_User]]:
         """List all users via GET /api/users/.
 
         Returns:
             The detailed response object from the generated client.
         """
-        return self._ep["list"].sync_detailed(client=self._client)
+        res: Response[list[_User]] = self._ep["list"].sync_detailed(client=self._client)
+        return res
 
-    def update_user(self, user_id: str, body: Union[Any, dict]):
+    def update_user(self, user_id: str, body: Union[_UserUpdate, dict[str, object]]) -> Response[_User]:
         """Update a user via PUT /api/users/{id}/.
 
         Args:
@@ -124,9 +138,11 @@ class UsersAPI:
             body_obj = self._UserUpdate.from_dict(body)
         else:
             body_obj = body
-        return self._ep["update"].sync_detailed(client=self._client, id=user_id, body=body_obj)
 
-    def partial_update_user(self, user_id: str, body: dict):
+        res: Response[_User] = self._ep["update"].sync_detailed(client=self._client, id=user_id, body=body_obj)
+        return res
+
+    def partial_update_user(self, user_id: str, body: dict[str, object]) -> Response[_User]:
         """Partially update a user via PATCH /api/users/{id}/.
 
         Args:
@@ -139,9 +155,10 @@ class UsersAPI:
             The detailed response object from the generated client.
         """
         m_body = self._PatchedUserUpdate.from_dict(body)
-        return self._ep["partial_update"].sync_detailed(client=self._client, id=user_id, body=m_body)
+        res: Response[_User] = self._ep["partial_update"].sync_detailed(client=self._client, id=user_id, body=m_body)
+        return res
 
-    def delete_user(self, user_id: str):
+    def delete_user(self, user_id: str) -> Response[None]:
         """Delete a user via DELETE /api/users/{id}/.
 
         Args:
@@ -150,4 +167,5 @@ class UsersAPI:
         Returns:
             The detailed response object from the generated client.
         """
-        return self._ep["destroy"].sync_detailed(client=self._client, id=user_id)
+        res: Response[None] = self._ep["destroy"].sync_detailed(client=self._client, id=user_id)
+        return res

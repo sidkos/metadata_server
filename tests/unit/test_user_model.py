@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Any, Callable
 
 import pytest
 from metadata_client import AuthenticatedClient
@@ -15,7 +16,7 @@ from metadata_client.models import PatchedUserUpdate, User, UserUpdate
 from src.tools import generate_israeli_id, generate_random_phone_number
 
 
-def test_health_check(non_authenticated_client):
+def test_health_check(non_authenticated_client: Any) -> None:
     response = health_retrieve.sync_detailed(client=non_authenticated_client)
     assert response.status_code == HTTPStatus.OK
 
@@ -40,13 +41,14 @@ CREATE_CASES = [
 
 
 @pytest.mark.parametrize("user_builder,expect_ok", CREATE_CASES)
-def test_users_create_parametrized(client, user_builder, expect_ok):
+def test_users_create_parametrized(client: Any, user_builder: Callable[[], User], expect_ok: bool) -> None:
     user = user_builder()
     resp = users_create.sync_detailed(client=client, body=user)
     if expect_ok:
         assert resp.status_code == HTTPStatus.CREATED
+        assert resp.parsed is not None
         assert resp.parsed.id == user.id
-        # Cleanup: delete via API and validate removal
+
         del_resp = users_destroy.sync_detailed(client=client, id=user.id)
         assert del_resp.status_code == HTTPStatus.NO_CONTENT
         get_resp = users_retrieve.sync_detailed(client=client, id=user.id)
@@ -66,7 +68,12 @@ PATCH_CASES = [
 
 
 @pytest.mark.parametrize("payload_builder,expect_ok", PATCH_CASES)
-def test_users_partial_update_parametrized(client: AuthenticatedClient, payload_builder, expect_ok, new_user: User):
+def test_users_partial_update_parametrized(
+    client: AuthenticatedClient,
+    payload_builder: Callable[[], dict[str, Any]],
+    expect_ok: bool,
+    new_user: User,
+) -> None:
     user = new_user
     create_resp = users_create.sync_detailed(client=client, body=user)
     assert create_resp.status_code == HTTPStatus.CREATED
@@ -87,7 +94,6 @@ def test_users_partial_update_parametrized(client: AuthenticatedClient, payload_
         assert resp.status_code == HTTPStatus.BAD_REQUEST
         assert resp.parsed is None
 
-    # Cleanup: delete the created user and validate deletion
     del_resp = users_destroy.sync_detailed(client=client, id=user.id)
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     get_resp = users_retrieve.sync_detailed(client=client, id=user.id)
@@ -96,13 +102,11 @@ def test_users_partial_update_parametrized(client: AuthenticatedClient, payload_
 
 PUT_CASES = [
     pytest.param(
-        # OK: client sends id equal to path (many generators require id in model)
         lambda cur_id: {"id": cur_id, "name": "User B", "phone": generate_random_phone_number(), "address": "Addr B"},
         True,
         id="put-with-same-id:ok",
     ),
     pytest.param(
-        # Forbidden: client sends a different id attempting to change PK
         lambda cur_id: {
             "id": generate_israeli_id(),
             "name": "User B",
@@ -113,7 +117,6 @@ PUT_CASES = [
         id="put-with-different-id:forbidden",
     ),
     pytest.param(
-        # Invalid phone while keeping same id
         lambda cur_id: {"id": cur_id, "name": "User C", "phone": "0501234567", "address": "Addr C"},
         False,
         id="put-invalid-phone:bad-format",
@@ -122,7 +125,12 @@ PUT_CASES = [
 
 
 @pytest.mark.parametrize("payload_builder,expect_ok", PUT_CASES)
-def test_users_update_put_parametrized(client: AuthenticatedClient, payload_builder, expect_ok, new_user: User):
+def test_users_update_put_parametrized(
+    client: AuthenticatedClient,
+    payload_builder: Any,
+    expect_ok: bool,
+    new_user: User,
+) -> None:
     user = new_user
     create_resp = users_create.sync_detailed(client=client, body=user)
     assert create_resp.status_code == HTTPStatus.CREATED
@@ -143,7 +151,6 @@ def test_users_update_put_parametrized(client: AuthenticatedClient, payload_buil
         assert resp.status_code == HTTPStatus.BAD_REQUEST
         assert resp.parsed is None
 
-    # Cleanup: delete the created user and validate deletion
     del_resp = users_destroy.sync_detailed(client=client, id=user.id)
     assert del_resp.status_code == HTTPStatus.NO_CONTENT
     get_resp = users_retrieve.sync_detailed(client=client, id=user.id)

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Union, cast
+
+from metadata_client import AuthenticatedClient, Client
+from metadata_client.types import Response
 
 
 class HealthAPI:
     """Health endpoints wrapper using generated metadata_client api module."""
 
-    def __init__(self, client: Any) -> None:
+    def __init__(self, client: Union[Client, AuthenticatedClient]) -> None:
         """Initialize the HealthAPI wrapper.
 
         Args:
@@ -26,10 +29,10 @@ class HealthAPI:
         self._client = client
         self._health_retrieve = _health_retrieve
 
-    def health_check(self):
+    def health_check(self) -> Response[dict[str, str]]:
         """Call GET /api/health/ and return the detailed response.
 
         Returns:
             The detailed response object from the generated client.
         """
-        return self._health_retrieve.sync_detailed(client=self._client)
+        return cast(Response[dict[str, str]], self._health_retrieve.sync_detailed(client=self._client))
