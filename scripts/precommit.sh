@@ -7,5 +7,5 @@ black .
 flake8 .
 pycodestyle .
 # Let mypy read targets from mypy.ini (avoids duplicate module names like src.package vs package)
-PYTHONPATH=src mypy
+mypy .
 yamllint . --no-warnings

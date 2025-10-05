@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,12 @@ from metadata_client import Client as _Client
 from metadata_client.models import User
 
 from src.tools import generate_israeli_id, generate_random_phone_number
+
+# Ensure in-repo dp-client package is importable before site-packages version
+_repo_root = Path(__file__).resolve().parents[1]
+_dp_pkg_path = str(_repo_root / "dp-client")
+if _dp_pkg_path not in sys.path:
+    sys.path.insert(0, _dp_pkg_path)
 
 try:
     # Enable local hostname fallback for Postgres unless explicitly disabled

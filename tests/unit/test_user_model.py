@@ -10,7 +10,7 @@ from metadata_client.api.users import (
     users_retrieve,
     users_update,
 )
-from metadata_client.models import User, UserUpdate, PatchedUserUpdate
+from metadata_client.models import PatchedUserUpdate, User, UserUpdate
 
 from src.tools import generate_israeli_id, generate_random_phone_number
 

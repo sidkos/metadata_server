@@ -34,7 +34,9 @@ class UsersAPI:
         """
         try:
             from metadata_client.api import users as _users_api
+            from metadata_client.models import PatchedUserUpdate as _PatchedUserUpdate
             from metadata_client.models import User as _User
+            from metadata_client.models import UserUpdate as _UserUpdate
         except Exception as exc:
             raise RuntimeError(
                 "metadata-client is required but not installed or failed to import. "
@@ -43,11 +45,21 @@ class UsersAPI:
 
         self._client = client
         self._User = _User
+        self._UserUpdate = _UserUpdate
+        self._PatchedUserUpdate = _PatchedUserUpdate
 
-        # Load all endpoints dynamically
-        self._ep: Dict[str, Any] = {
-            key: getattr(_users_api, attr_name, None) for key, attr_name in self._ENDPOINT_ATTRS.items()
-        }
+        # Load all endpoints by importing submodules explicitly since
+        # metadata_client.api.users may not expose submodules as attributes.
+        import importlib
+
+        self._ep: Dict[str, Any] = {}
+        for key, attr_name in self._ENDPOINT_ATTRS.items():
+            module_name = f"metadata_client.api.users.{attr_name}"
+            try:
+                mod = importlib.import_module(module_name)
+            except Exception:
+                mod = None
+            self._ep[key] = mod
 
         # Validate presence of ALL endpoints (include all options)
         missing = [self._ENDPOINT_ATTRS[k] for k, v in self._ep.items() if v is None]
@@ -96,13 +108,22 @@ class UsersAPI:
 
         Args:
             user_id: The primary key of the user to update.
-            body: Either a metadata_client.models.User (or compatible dict) with
-                fields to fully update. "id" must not be included by server rules.
+            body: Either a metadata_client.models.UserUpdate instance or a dict
+                that will be converted with UserUpdate.from_dict. If the dict
+                omits an "id" field, this client will inject the path id to
+                satisfy the generated model requirements. Attempting to change
+                the id (mismatch between body and path) will result in 400 from
+                the server.
 
         Returns:
             The detailed response object from the generated client.
         """
-        body_obj = self._User.from_dict(body) if isinstance(body, dict) else body
+        if isinstance(body, dict):
+            if "id" not in body:
+                body = {**body, "id": user_id}
+            body_obj = self._UserUpdate.from_dict(body)
+        else:
+            body_obj = body
         return self._ep["update"].sync_detailed(client=self._client, id=user_id, body=body_obj)
 
     def partial_update_user(self, user_id: str, body: dict):
@@ -111,13 +132,14 @@ class UsersAPI:
         Args:
             user_id: The primary key of the user to update.
             body: A partial JSON dictionary of fields to update. Must not
-                include "id" (server enforces immutability).
+                include "id" (server enforces immutability). Converted to
+                PatchedUserUpdate model for the generated client.
 
         Returns:
             The detailed response object from the generated client.
         """
-        # PATCH accepts a partial dict
-        return self._ep["partial_update"].sync_detailed(client=self._client, id=user_id, body=body)
+        m_body = self._PatchedUserUpdate.from_dict(body)
+        return self._ep["partial_update"].sync_detailed(client=self._client, id=user_id, body=m_body)
 
     def delete_user(self, user_id: str):
         """Delete a user via DELETE /api/users/{id}/.

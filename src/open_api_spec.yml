@@ -406,10 +406,11 @@ components:
     PatchedUserUpdate:
       type: object
       description: |-
-        Serializer for updating users with strict id immutability.
+        Serializer for updating users enforcing id immutability.
 
         - `id` is read-only.
-        - If `id` appears in the request body, return 400 with a clear error.
+        - If `id` appears in the request body and differs from the instance id, return 400.
+        - If `id` equals the existing instance id, allow it (some clients always send it).
       properties:
         id:
           type: string
@@ -487,10 +488,11 @@ components:
     UserUpdate:
       type: object
       description: |-
-        Serializer for updating users with strict id immutability.
+        Serializer for updating users enforcing id immutability.
 
         - `id` is read-only.
-        - If `id` appears in the request body, return 400 with a clear error.
+        - If `id` appears in the request body and differs from the instance id, return 400.
+        - If `id` equals the existing instance id, allow it (some clients always send it).
       properties:
         id:
           type: string
