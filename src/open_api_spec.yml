@@ -223,7 +223,7 @@ paths:
       description: |-
         User operations.
 
-        Provides create, retrieve, and list operations for User resources.
+        Provides create, retrieve, list, update, partial_update, and destroy.
       tags:
       - users
       security:
@@ -243,7 +243,7 @@ paths:
       description: |-
         User operations.
 
-        Provides create, retrieve, and list operations for User resources.
+        Provides create, retrieve, list, update, partial_update, and destroy.
       tags:
       - users
       requestBody:
@@ -268,7 +268,7 @@ paths:
       description: |-
         User operations.
 
-        Provides create, retrieve, and list operations for User resources.
+        Provides create, retrieve, list, update, partial_update, and destroy.
       parameters:
       - in: path
         name: id
@@ -287,6 +287,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+    put:
+      operationId: users_update
+      description: |-
+        User operations.
+
+        Provides create, retrieve, list, update, partial_update, and destroy.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+        required: true
+      security:
+      - bearerAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: users_partial_update
+      description: |-
+        User operations.
+
+        Provides create, retrieve, list, update, partial_update, and destroy.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+      security:
+      - bearerAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    delete:
+      operationId: users_destroy
+      description: |-
+        User operations.
+
+        Provides create, retrieve, list, update, partial_update, and destroy.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - users
+      security:
+      - bearerAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/users/ids/:
     get:
       operationId: users_ids_retrieve
@@ -324,6 +403,30 @@ components:
           type: string
       required:
       - status
+    PatchedUserUpdate:
+      type: object
+      description: |-
+        Serializer for updating users with strict id immutability.
+
+        - `id` is read-only.
+        - If `id` appears in the request body, return 400 with a clear error.
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Israeli ID (string, 5-9 digits, valid checksum)
+        name:
+          type: string
+          description: Full name (required).
+          maxLength: 100
+        phone:
+          type: string
+          description: Phone number in E.164 format (e.g., +972...).
+          maxLength: 20
+        address:
+          type: string
+          description: Street address (required).
+          maxLength: 255
     TokenObtainPair:
       type: object
       properties:
@@ -364,6 +467,35 @@ components:
           type: string
           description: Israeli ID (string, 5-9 digits, valid checksum)
           maxLength: 9
+        name:
+          type: string
+          description: Full name (required).
+          maxLength: 100
+        phone:
+          type: string
+          description: Phone number in E.164 format (e.g., +972...).
+          maxLength: 20
+        address:
+          type: string
+          description: Street address (required).
+          maxLength: 255
+      required:
+      - address
+      - id
+      - name
+      - phone
+    UserUpdate:
+      type: object
+      description: |-
+        Serializer for updating users with strict id immutability.
+
+        - `id` is read-only.
+        - If `id` appears in the request body, return 400 with a clear error.
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Israeli ID (string, 5-9 digits, valid checksum)
         name:
           type: string
           description: Full name (required).

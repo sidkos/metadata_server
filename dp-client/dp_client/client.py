@@ -28,6 +28,14 @@ class DPClient:
         prefix: str = "Bearer",
         timeout: float = 10.0,
     ) -> None:
+        """Initialize DPClient and its composed helpers.
+
+        Args:
+            base_url: Base URL of the metadata server (e.g., http://localhost:8000/api).
+            token: Optional bearer token for authenticated requests.
+            prefix: Authorization prefix (default: "Bearer").
+            timeout: Default request timeout in seconds for higher-level operations.
+        """
         self._client_factory = MetaDataServerAPIClientFactory()
         self.MetaDataServerAPIClient: Any = self._client_factory.build(base_url=base_url, token=token, prefix=prefix)
         self.UsersApi = UsersAPI(self.MetaDataServerAPIClient)
@@ -36,13 +44,75 @@ class DPClient:
         self._timeout = timeout
 
     def health_check(self):
+        """Call the health check endpoint.
+
+        Returns:
+            The detailed response from the generated client for GET /api/health/.
+        """
         return self.HealthAPI.health_check()
 
     def create_user(self, user: Union[Any, dict[str, Any]]):
+        """Create a user.
+
+        Args:
+            user: User model instance or dict payload for user creation.
+
+        Returns:
+            The detailed response from the generated client.
+        """
         return self.UsersApi.create_user(user)
 
     def get_user(self, user_id: str):
+        """Retrieve a user by ID.
+
+        Args:
+            user_id: Primary key of the user.
+
+        Returns:
+            The detailed response from the generated client.
+        """
         return self.UsersApi.get_user(user_id)
 
     def list_users(self):
+        """List all users.
+
+        Returns:
+            The detailed response from the generated client.
+        """
         return self.UsersApi.list_users()
+
+    # New endpoints wrappers
+    def update_user(self, user_id: str, body):
+        """Update a user via PUT /api/users/{id}/.
+
+        Args:
+            user_id: Primary key of the user to update.
+            body: User model instance or compatible dict with fields to update.
+
+        Returns:
+            The detailed response from the generated client.
+        """
+        return self.UsersApi.update_user(user_id, body)
+
+    def partial_update_user(self, user_id: str, body: dict):
+        """Partially update a user via PATCH /api/users/{id}/.
+
+        Args:
+            user_id: Primary key of the user to update.
+            body: Partial dict of fields to update (must not include "id").
+
+        Returns:
+            The detailed response from the generated client.
+        """
+        return self.UsersApi.partial_update_user(user_id, body)
+
+    def delete_user(self, user_id: str):
+        """Delete a user via DELETE /api/users/{id}/.
+
+        Args:
+            user_id: Primary key of the user to delete.
+
+        Returns:
+            The detailed response from the generated client.
+        """
+        return self.UsersApi.delete_user(user_id)

@@ -7,6 +7,15 @@ class HealthAPI:
     """Health endpoints wrapper using generated metadata_client api module."""
 
     def __init__(self, client: Any) -> None:
+        """Initialize the HealthAPI wrapper.
+
+        Args:
+            client: An instance of the generated metadata_client Client or
+                AuthenticatedClient used to perform HTTP requests.
+
+        Raises:
+            RuntimeError: If the generated health endpoint cannot be imported.
+        """
         try:
             from metadata_client.api.health import health_retrieve as _health_retrieve
         except Exception as exc:
@@ -18,4 +27,9 @@ class HealthAPI:
         self._health_retrieve = _health_retrieve
 
     def health_check(self):
+        """Call GET /api/health/ and return the detailed response.
+
+        Returns:
+            The detailed response object from the generated client.
+        """
         return self._health_retrieve.sync_detailed(client=self._client)

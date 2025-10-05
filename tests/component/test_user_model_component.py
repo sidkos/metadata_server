@@ -74,7 +74,6 @@ def created_user_ids(client: DPClient) -> Generator[List[str], None, None]:
 
 def test_health_check_component(non_authenticated_client: DPClient):
     response = non_authenticated_client.health_check()
-    assert response.status_code == 200
     assert response.status_code == HTTPStatus.OK
 
 
@@ -99,6 +98,11 @@ def test_create_user_valid_component(client: DPClient, created_user_ids, require
     assert db_user["phone"] == payload["phone"]
     assert db_user["address"] == payload["address"]
 
+    # Cleanup: delete via API and validate DB removal
+    del_resp = client.delete_user(payload["id"])  # 204 expected
+    assert del_resp.status_code == HTTPStatus.NO_CONTENT
+    assert client.PGDBClient.get_user_by_id(payload["id"]) is None
+
 
 def test_create_user_invalid_id_component(client: DPClient, require_db):
     payload = {
@@ -108,7 +112,6 @@ def test_create_user_invalid_id_component(client: DPClient, require_db):
         "address": "Test Street 1",
     }
     response = client.create_user(payload)
-    assert response.status_code == 400
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.parsed is None
 
@@ -124,7 +127,6 @@ def test_create_user_invalid_phone_component(client: DPClient, require_db):
         "address": "Test Street 1",
     }
     response = client.create_user(payload)
-    assert response.status_code == 400
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.parsed is None
 
@@ -151,6 +153,11 @@ def test_retrieve_user_component(client: DPClient, created_user_ids, require_db)
     assert response.status_code == HTTPStatus.OK
     assert response.parsed.id == payload["id"]
     assert response.parsed.name == payload["name"]
+
+    # Cleanup: delete and verify DB removal
+    del_resp = client.delete_user(payload["id"])  # 204 expected
+    assert del_resp.status_code == HTTPStatus.NO_CONTENT
+    assert client.PGDBClient.get_user_by_id(payload["id"]) is None
 
 
 def test_list_users_component(client: DPClient, created_user_ids, require_db):
@@ -183,3 +190,124 @@ def test_list_users_component(client: DPClient, created_user_ids, require_db):
     returned_ids_api = {u.id for u in list_resp.parsed}
     for u in users_data:
         assert u["id"] in returned_ids_api
+
+    # Cleanup: delete all created users via API and validate DB removal
+    for u in users_data:
+        del_resp = client.delete_user(u["id"])  # 204 expected
+        assert del_resp.status_code == HTTPStatus.NO_CONTENT
+        assert client.PGDBClient.get_user_by_id(u["id"]) is None
+
+
+# ---- Parametrized update/patch and delete with DB validations ----
+
+
+def _new_user_payload() -> dict:
+    return {
+        "id": generate_israeli_id(),
+        "name": "Comp A",
+        "phone": generate_random_phone_number(),
+        "address": "Addr A",
+    }
+
+
+PATCH_CASES_COMPONENT = [
+    pytest.param(lambda: {"address": "Comp St 99"}, True, id="component:patch-address:ok"),
+    pytest.param(lambda: {"name": "Comp Renamed"}, True, id="component:patch-name:ok"),
+    pytest.param(lambda: {"phone": generate_random_phone_number()}, True, id="component:patch-phone:ok"),
+    pytest.param(lambda: {"phone": "0501234567"}, False, id="component:patch-phone:bad-format"),
+    pytest.param(lambda: {"id": generate_israeli_id()}, False, id="component:patch-id:forbidden"),
+]
+
+
+@pytest.mark.usefixtures("require_db")
+@pytest.mark.parametrize("payload_builder,expect_ok", PATCH_CASES_COMPONENT)
+def test_component_users_partial_update_parametrized(client: DPClient, created_user_ids, payload_builder, expect_ok):
+    payload = _new_user_payload()
+    created_user_ids.append(payload["id"])  # ensure cleanup
+
+    create_resp = client.create_user(payload)
+    assert create_resp.status_code == HTTPStatus.CREATED
+
+    patch_body = payload_builder()
+    resp = client.partial_update_user(payload["id"], patch_body)
+
+    if expect_ok:
+        assert resp.status_code == HTTPStatus.OK
+        for k, v in patch_body.items():
+            if k == "id":
+                continue
+            assert getattr(resp.parsed, k) == v
+        # DB verify
+        db = client.PGDBClient.get_user_by_id(payload["id"])
+        for k, v in patch_body.items():
+            if k != "id":
+                assert db[k] == v
+    else:
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+        assert resp.parsed is None
+        # DB should remain unchanged
+        db = client.PGDBClient.get_user_by_id(payload["id"])
+        assert db is not None
+
+    # Cleanup: delete via API and validate DB removal
+    del_resp = client.delete_user(payload["id"])  # 204 expected
+    assert del_resp.status_code == HTTPStatus.NO_CONTENT
+    assert client.PGDBClient.get_user_by_id(payload["id"]) is None
+
+
+PUT_CASES_COMPONENT = [
+    pytest.param(
+        lambda: {"name": "Comp B", "phone": generate_random_phone_number(), "address": "Addr B"},
+        True,
+        id="component:put-no-id:ok",
+    ),
+    pytest.param(
+        lambda: {
+            "id": generate_israeli_id(),
+            "name": "Comp C",
+            "phone": generate_random_phone_number(),
+            "address": "Addr C",
+        },
+        False,
+        id="component:put-with-id:forbidden",
+    ),
+    pytest.param(
+        lambda: {"name": "Comp D", "phone": "0501234567", "address": "Addr D"},
+        False,
+        id="component:put-invalid-phone:bad-format",
+    ),
+]
+
+
+@pytest.mark.usefixtures("require_db")
+@pytest.mark.parametrize("payload_builder,expect_ok", PUT_CASES_COMPONENT)
+def test_component_users_update_put_parametrized(client: DPClient, created_user_ids, payload_builder, expect_ok):
+    payload = _new_user_payload()
+    created_user_ids.append(payload["id"])  # ensure cleanup
+
+    create_resp = client.create_user(payload)
+    assert create_resp.status_code == HTTPStatus.CREATED
+
+    put_body = payload_builder()
+    resp = client.update_user(payload["id"], put_body)
+
+    if expect_ok:
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.parsed.id == payload["id"]
+        for k, v in put_body.items():
+            if k == "id":
+                continue
+            assert getattr(resp.parsed, k) == v
+        # DB verify
+        db = client.PGDBClient.get_user_by_id(payload["id"])
+        for k, v in put_body.items():
+            if k != "id":
+                assert db[k] == v
+    else:
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+        assert resp.parsed is None
+
+    # Cleanup: delete via API and validate DB removal
+    del_resp = client.delete_user(payload["id"])  # 204 expected
+    assert del_resp.status_code == HTTPStatus.NO_CONTENT
+    assert client.PGDBClient.get_user_by_id(payload["id"]) is None
