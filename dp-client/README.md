@@ -13,7 +13,7 @@ A higher-level, test-friendly Python client for the Metadata Server, designed fo
 `DPClient` composes distinct parts with strict separation of concerns:
 - MetaDataServerAPIClient — factory‑built HTTP client for the Metadata Server (authenticated or not).
 - HealthAPI — methods for `/api/health/`.
-- UsersApi — methods for `/api/users/` (create/get/list), aligned with unit tests usage.
+- UsersApi — methods for `/api/users/` (create/get/list/update/partial_update/destroy) with strict id immutability enforced by the server. The client injects the path id into PUT bodies if omitted, and rejects PATCH bodies containing `id`.
 - PGDBClient — optional Postgres DB helper used in tests to verify persistence and cleanup. It is decoupled from Django ORM and uses driver(s) under `dp_client.db.drivers`.
 
 This design keeps HTTP API usage and DB verification separate, while allowing simple orchestration from tests.
@@ -93,10 +93,25 @@ if client.PGDBClient is not None:
 Backwards‑compatible helpers (delegating to structured APIs):
 
 ```python
+from dp_client import DPClient
+client = DPClient(base_url="http://localhost:8000", token="<ACCESS_TOKEN>")
+
+# Health
 client.health_check()
+
+# Users CRUD
 client.create_user({"id": "...", "name": "...", "phone": "+972...", "address": "..."})
-client.get_user("...")
+client.get_user("<id>")
 client.list_users()
+
+# Update (PUT): body must represent the same id as in the path; if omitted, dp-client injects the path id
+client.update_user("<id>", {"name": "New", "phone": "+9728...", "address": "..."})
+
+# Partial update (PATCH): must NOT include 'id' in body
+client.partial_update_user("<id>", {"address": "Changed"})
+
+# Delete
+client.delete_user("<id>")
 ```
 
 ## Using dp-client in component tests

@@ -33,11 +33,14 @@ When to use what:
 # API surface (summary)
 - POST /api/users/ — Create a user
 - GET /api/users/{id}/ — Retrieve user by ID
-- GET /api/users/ — List all user IDs
+- GET /api/users/ — List users
+- PUT /api/users/{id}/ — Update a user (id is immutable; if provided in body it must equal the path id)
+- PATCH /api/users/{id}/ — Partially update a user (id in body is forbidden)
+- DELETE /api/users/{id}/ — Delete a user
 - GET /api/health/ — Public health check (no auth)
 
 Validation rules:
-- id: Valid Israeli ID (checksum validated)
+- id: Valid Israeli ID (checksum validated). Primary key is immutable after creation.
 - phone: International format starting with `+`
 - name: Required
 - address: Required
