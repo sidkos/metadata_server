@@ -12,22 +12,35 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .models.user import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserUpdateSerializer
 
 
 class UserViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """User operations.
 
-    Provides create, retrieve, and list operations for User resources.
+    Provides create, retrieve, list, update, partial_update, and destroy.
     """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_serializer_class(self):
+        """Return the appropriate serializer class for the current action.
+
+        Returns:
+            type: UserUpdateSerializer for update/partial_update actions, or
+            the default serializer class otherwise.
+        """
+        if getattr(self, "action", None) in {"update", "partial_update"}:
+            return UserUpdateSerializer
+        return super().get_serializer_class()
 
     @action(detail=False, methods=["get"])
     def ids(self, request: Request) -> Response:

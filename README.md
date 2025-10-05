@@ -33,11 +33,14 @@ When to use what:
 # API surface (summary)
 - POST /api/users/ — Create a user
 - GET /api/users/{id}/ — Retrieve user by ID
-- GET /api/users/ — List all user IDs
+- GET /api/users/ — List users
+- PUT /api/users/{id}/ — Update a user (id is immutable; if provided in body it must equal the path id)
+- PATCH /api/users/{id}/ — Partially update a user (id in body is forbidden)
+- DELETE /api/users/{id}/ — Delete a user
 - GET /api/health/ — Public health check (no auth)
 
 Validation rules:
-- id: Valid Israeli ID (checksum validated)
+- id: Valid Israeli ID (checksum validated). Primary key is immutable after creation.
 - phone: International format starting with `+`
 - name: Required
 - address: Required
@@ -189,3 +192,30 @@ Pipeline summary:
   - Introduce semantic versioning for all deliverables.
   - Publish metadata_client and dp-client to a registry and pin versions in tests and downstream projects.
   - Keep dp-client in a separate repository with its own SDLC, releases, and changelog.
+
+
+# Test matrix
+
+The repository contains unit tests (using the generated metadata_client) and component tests (using the higher-level dp-client with optional DB validations). Below is an overview of the current tests and what they verify.
+
+| Suite      | Test function                                   | Parametrized case IDs                                           | What it verifies                                                                                          | DB checks |
+|------------|---------------------------------------------------|------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|-----------|
+| Unit       | test_health_check                                 | —                                                                | GET /api/health/ returns 200 OK                                                                            | No        |
+| Unit       | test_users_create_parametrized                    | create:ok, create:bad-id, create:bad-phone                       | POST /api/users/ happy path and validation failures                                                        | No        |
+| Unit       | test_users_partial_update_parametrized            | patch-address:ok, patch-name:ok, patch-phone:ok-valid, patch-phone:bad-format, patch-id:forbidden | PATCH /api/users/{id}/; validators apply; id in body forbidden                                             | No        |
+| Unit       | test_users_update_put_parametrized                | put-with-same-id:ok, put-with-different-id:forbidden, put-invalid-phone:bad-format | PUT /api/users/{id}/; id immutable (must match path); validators apply                                     | No        |
+| Component  | test_health_check_component                       | —                                                                | GET /api/health/ returns 200 OK                                                                            | No        |
+| Component  | test_create_user_valid_component                  | —                                                                | Create user via API and verify response; then verify row exists and delete it                              | Yes       |
+| Component  | test_create_user_invalid_id_component             | —                                                                | Invalid ID rejected by API; ensure no row inserted                                                         | Yes       |
+| Component  | test_create_user_invalid_phone_component          | —                                                                | Invalid phone rejected by API; ensure no row inserted                                                      | Yes       |
+| Component  | test_retrieve_user_component                      | —                                                                | Create and then GET /api/users/{id}/ reflects fields; cleanup and DB removal                               | Yes       |
+| Component  | test_list_users_component                         | —                                                                | Create two users, list includes their IDs; cleanup and DB removal                                          | Yes       |
+| Component  | test_component_users_partial_update_parametrized  | component:patch-address:ok, component:patch-name:ok, component:patch-phone:ok, component:patch-phone:bad-format, component:patch-id:forbidden | PATCH /api/users/{id}/ happy and failure paths; DB reflects successful changes; id in body forbidden       | Yes       |
+| Component  | test_component_users_update_put_parametrized      | component:put-no-id:ok, component:put-with-id:forbidden, component:put-invalid-phone:bad-format | PUT /api/users/{id}/ happy and failure paths; server enforces immutable id; DB reflects successful changes | Yes       |
+
+How to run tests:
+- Unit tests: `pytest tests/unit -s -v`
+- Component tests (with DB validations):
+  - Optionally enable fallback if running outside Docker and `.env` uses POSTGRES_HOST=db: `export POSTGRES_ALLOW_LOCAL_FALLBACK=true`
+  - Build and install dp-client: `./scripts/build_and_install_dp_client.sh`
+  - Run: `pytest tests/component -s -v`

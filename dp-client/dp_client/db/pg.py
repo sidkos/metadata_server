@@ -90,7 +90,7 @@ class PGDBClient:
         )
         self._table = table
 
-    def get_user_by_id(self, user_id: str):
+    def get_user_by_id(self, user_id: str) -> Optional[dict[str, str]]:
         row = self._driver.fetch_one(
             f"SELECT id, name, phone, address FROM {self._table} WHERE id = %s",
             (user_id,),

@@ -1,9 +1,23 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
+import requests
+from metadata_client import AuthenticatedClient as _AuthenticatedClient
+from metadata_client import Client as _Client
+from metadata_client.models import User
+
+from src.tools import generate_israeli_id, generate_random_phone_number
+
+# Ensure in-repo dp-client package is importable before site-packages version
+_repo_root = Path(__file__).resolve().parents[1]
+_dp_pkg_path = str(_repo_root / "dp-client")
+if _dp_pkg_path not in sys.path:
+    sys.path.insert(0, _dp_pkg_path)
 
 try:
     # Enable local hostname fallback for Postgres unless explicitly disabled
@@ -20,11 +34,14 @@ except Exception:
     pass
 
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def base_url() -> str:
     """Resolve API base URL from environment with sensible defaults.
 
     Prefers API_BASE_URL; otherwise builds from METADATA_HOST and METADATA_PORT.
+
+    Returns:
+        str: A non-empty base URL string. Always truthy; falls back to http://localhost:8000.
     """
     return os.environ.get(
         "API_BASE_URL",
@@ -32,7 +49,7 @@ def base_url() -> str:
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def auth_token(base_url: str) -> str:
     """Get an access token for authenticated API tests.
 
@@ -41,8 +58,6 @@ def auth_token(base_url: str) -> str:
     token = os.environ.get("API_TOKEN")
     if token:
         return token
-
-    import requests  # imported here to avoid hard dependency if not needed
 
     username = os.environ.get("TEST_USERNAME")
     password = os.environ.get("TEST_PASSWORD")
@@ -55,4 +70,55 @@ def auth_token(base_url: str) -> str:
         timeout=10,
     )
     resp.raise_for_status()
-    return resp.json()["access"]
+    data = cast(dict[str, Any], resp.json())
+    return cast(str, data["access"])
+
+
+try:
+    AuthenticatedClient: Any = _AuthenticatedClient
+    Client: Any = _Client
+except Exception:
+    AuthenticatedClient = None
+    Client = None
+
+
+@pytest.fixture(scope="session", autouse=True)
+def non_authenticated_client(base_url: str) -> _Client:
+    """Unauthenticated generated API client (metadata_client.Client).
+
+    Args:
+        base_url: Base URL for the API under test.
+
+    Returns:
+        metadata_client.Client instance.
+    """
+    return _Client(base_url=base_url)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def client(base_url: str, auth_token: str) -> _AuthenticatedClient:
+    """Authenticated generated API client (metadata_client.AuthenticatedClient).
+
+    Args:
+        base_url: Base URL for the API under test.
+        auth_token: Access token for Authorization header.
+
+    Returns:
+        metadata_client.AuthenticatedClient instance.
+    """
+    return _AuthenticatedClient(base_url=base_url, token=auth_token, prefix="Bearer")
+
+
+@pytest.fixture(scope="function")
+def new_user() -> User:
+    """Build a fresh valid User payload for tests.
+
+    Returns:
+        User: A new User instance with randomized, valid fields.
+    """
+    return User(
+        id=generate_israeli_id(),
+        name="User A",
+        phone=generate_random_phone_number(),
+        address="Addr A",
+    )

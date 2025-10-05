@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional, Union
+
+from metadata_client import AuthenticatedClient, Client
 
 
 class MetaDataServerAPIClientFactory:
@@ -22,7 +24,9 @@ class MetaDataServerAPIClientFactory:
         self._AuthenticatedClient = _AuthenticatedClient
         self._Client = _Client
 
-    def build(self, base_url: str, token: Optional[str] = None, prefix: str = "Bearer") -> Any:
+    def build(
+        self, base_url: str, token: Optional[str] = None, prefix: str = "Bearer"
+    ) -> Union[Client, AuthenticatedClient]:
         if token:
             return self._AuthenticatedClient(base_url=base_url, token=token, prefix=prefix)
         return self._Client(base_url=base_url)

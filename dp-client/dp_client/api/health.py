@@ -1,12 +1,24 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Union, cast
+
+from metadata_client import AuthenticatedClient, Client
+from metadata_client.types import Response
 
 
 class HealthAPI:
     """Health endpoints wrapper using generated metadata_client api module."""
 
-    def __init__(self, client: Any) -> None:
+    def __init__(self, client: Union[Client, AuthenticatedClient]) -> None:
+        """Initialize the HealthAPI wrapper.
+
+        Args:
+            client: An instance of the generated metadata_client Client or
+                AuthenticatedClient used to perform HTTP requests.
+
+        Raises:
+            RuntimeError: If the generated health endpoint cannot be imported.
+        """
         try:
             from metadata_client.api.health import health_retrieve as _health_retrieve
         except Exception as exc:
@@ -17,5 +29,10 @@ class HealthAPI:
         self._client = client
         self._health_retrieve = _health_retrieve
 
-    def health_check(self):
-        return self._health_retrieve.sync_detailed(client=self._client)
+    def health_check(self) -> Response[dict[str, str]]:
+        """Call GET /api/health/ and return the detailed response.
+
+        Returns:
+            The detailed response object from the generated client.
+        """
+        return cast(Response[dict[str, str]], self._health_retrieve.sync_detailed(client=self._client))
